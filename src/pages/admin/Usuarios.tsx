@@ -29,7 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Edit, Users as UsersIcon, UserX } from "lucide-react";
+import { Plus, Edit, Users as UsersIcon, UserX, Key } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -53,6 +53,9 @@ export default function Usuarios() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState<Profile | null>(null);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [resetPasswordUsuario, setResetPasswordUsuario] = useState<Profile | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const [formData, setFormData] = useState({
     nome_completo: "",
@@ -251,6 +254,38 @@ export default function Usuarios() {
     }
   };
 
+  const handleResetPassword = (usuario: Profile) => {
+    setResetPasswordUsuario(usuario);
+    setNewPassword("");
+    setResetPasswordDialogOpen(true);
+  };
+
+  const handleConfirmResetPassword = async () => {
+    if (!resetPasswordUsuario) return;
+
+    if (!newPassword || newPassword.length < 6) {
+      toast.error("Senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(
+        resetPasswordUsuario.id,
+        { password: newPassword }
+      );
+
+      if (error) throw error;
+
+      toast.success("Senha alterada com sucesso!");
+      setResetPasswordDialogOpen(false);
+      setResetPasswordUsuario(null);
+      setNewPassword("");
+    } catch (error: any) {
+      console.error("Erro ao redefinir senha:", error);
+      toast.error(error.message || "Erro ao redefinir senha");
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       nome_completo: "",
@@ -344,6 +379,13 @@ export default function Usuarios() {
                         onClick={() => handleEdit(usuario)}
                       >
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleResetPassword(usuario)}
+                      >
+                        <Key className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -494,6 +536,45 @@ export default function Usuarios() {
               <Button type="submit">{editingUsuario ? "Atualizar" : "Criar"}</Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redefinir Senha</DialogTitle>
+            <DialogDescription>
+              Digite a nova senha para {resetPasswordUsuario?.nome_completo}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new_password">Nova Senha</Label>
+              <Input
+                id="new_password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                minLength={6}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setResetPasswordDialogOpen(false);
+                  setResetPasswordUsuario(null);
+                  setNewPassword("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleConfirmResetPassword}>
+                Redefinir Senha
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
