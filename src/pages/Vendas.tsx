@@ -35,10 +35,16 @@ export default function Vendas() {
   }, [adegaId]);
 
   const fetchProdutos = async () => {
+    if (!adegaId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("produtos")
         .select("id, nome, preco_venda, quantidade_estoque")
+        .eq("adega_id", adegaId)
         .eq("ativo", true)
         .gt("quantidade_estoque", 0)
         .order("nome");
