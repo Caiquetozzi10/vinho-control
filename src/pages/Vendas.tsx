@@ -181,11 +181,23 @@ export default function Vendas() {
     );
   }
 
+  const novaVenda = () => {
+    setCarrinho([]);
+    setSearchTerm("");
+    toast.success("Novo carrinho iniciado");
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Ponto de Venda</h1>
-        <p className="text-muted-foreground">Sistema rápido para registrar vendas</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Ponto de Venda</h1>
+          <p className="text-muted-foreground">Sistema rápido para registrar vendas</p>
+        </div>
+        <Button onClick={novaVenda} size="lg" className="gap-2">
+          <Plus className="h-5 w-5" />
+          Nova Venda
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
