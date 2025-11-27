@@ -278,139 +278,139 @@ export default function Vendas() {
             </CardHeader>
             <CardContent className="space-y-4">
               {carrinho.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
+                <p className="text-muted-foreground text-center py-4">
                   Carrinho vazio
                 </p>
               ) : (
-                <>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {carrinho.map((item) => (
-                      <div
-                        key={item.produto.id}
-                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{item.produto.nome}</p>
-                          <p className="text-xs text-muted-foreground">
-                            R$ {item.produto.preco_venda.toFixed(2)} × {item.quantidade}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => diminuirQuantidade(item.produto.id)}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-8 text-center font-medium">
-                            {item.quantidade}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => aumentarQuantidade(item.produto.id)}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removerDoCarrinho(item.produto.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {carrinho.map((item) => (
+                    <div
+                      key={item.produto.id}
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{item.produto.nome}</p>
+                        <p className="text-xs text-muted-foreground">
+                          R$ {item.produto.preco_venda.toFixed(2)} × {item.quantidade}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t pt-4 space-y-4">
-                    <div className="flex justify-between items-center text-lg font-bold">
-                      <span>Total:</span>
-                      <span className="text-primary">
-                        R$ {calcularTotal().toFixed(2)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => diminuirQuantidade(item.produto.id)}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-8 text-center font-medium">
+                          {item.quantidade}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => aumentarQuantidade(item.produto.id)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removerDoCarrinho(item.produto.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              )}
 
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold">Forma de Pagamento</Label>
-                      <RadioGroup value={formaPagamento} onValueChange={setFormaPagamento}>
-                        <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
-                          <RadioGroupItem value="dinheiro" id="dinheiro" />
-                          <Label htmlFor="dinheiro" className="flex items-center gap-2 cursor-pointer flex-1">
-                            <Banknote className="h-4 w-4" />
-                            Dinheiro
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
-                          <RadioGroupItem value="debito" id="debito" />
-                          <Label htmlFor="debito" className="flex items-center gap-2 cursor-pointer flex-1">
-                            <CreditCard className="h-4 w-4" />
-                            Débito
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
-                          <RadioGroupItem value="credito" id="credito" />
-                          <Label htmlFor="credito" className="flex items-center gap-2 cursor-pointer flex-1">
-                            <Wallet className="h-4 w-4" />
-                            Crédito
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
-                          <RadioGroupItem value="pix" id="pix" />
-                          <Label htmlFor="pix" className="flex items-center gap-2 cursor-pointer flex-1">
-                            <Smartphone className="h-4 w-4" />
-                            PIX
-                          </Label>
-                        </div>
-                      </RadioGroup>
+              <div className="border-t pt-4 space-y-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total:</span>
+                  <span className="text-primary">
+                    R$ {calcularTotal().toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Forma de Pagamento</Label>
+                  <RadioGroup value={formaPagamento} onValueChange={setFormaPagamento}>
+                    <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                      <RadioGroupItem value="dinheiro" id="dinheiro" />
+                      <Label htmlFor="dinheiro" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <Banknote className="h-4 w-4" />
+                        Dinheiro
+                      </Label>
                     </div>
+                    <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                      <RadioGroupItem value="debito" id="debito" />
+                      <Label htmlFor="debito" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <CreditCard className="h-4 w-4" />
+                        Débito
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                      <RadioGroupItem value="credito" id="credito" />
+                      <Label htmlFor="credito" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <Wallet className="h-4 w-4" />
+                        Crédito
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                      <RadioGroupItem value="pix" id="pix" />
+                      <Label htmlFor="pix" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <Smartphone className="h-4 w-4" />
+                        PIX
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
 
-                    {formaPagamento === "dinheiro" && (
-                      <div className="space-y-3 p-3 bg-muted rounded-lg">
-                        <div className="space-y-2">
-                          <Label htmlFor="valorRecebido" className="text-sm">Valor Recebido</Label>
-                          <Input
-                            id="valorRecebido"
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={valorRecebido}
-                            onChange={(e) => setValorRecebido(e.target.value)}
-                            className="text-lg"
-                          />
-                        </div>
-                        {valorRecebido && parseFloat(valorRecebido) >= calcularTotal() && (
-                          <div className="flex justify-between items-center p-2 bg-background rounded border border-primary/20">
-                            <span className="text-sm font-medium">Troco:</span>
-                            <span className="text-lg font-bold text-primary">
-                              R$ {calcularTroco().toFixed(2)}
-                            </span>
-                          </div>
-                        )}
+                {formaPagamento === "dinheiro" && (
+                  <div className="space-y-3 p-3 bg-muted rounded-lg">
+                    <div className="space-y-2">
+                      <Label htmlFor="valorRecebido" className="text-sm">Valor Recebido</Label>
+                      <Input
+                        id="valorRecebido"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={valorRecebido}
+                        onChange={(e) => setValorRecebido(e.target.value)}
+                        className="text-lg"
+                      />
+                    </div>
+                    {valorRecebido && parseFloat(valorRecebido) >= calcularTotal() && (
+                      <div className="flex justify-between items-center p-2 bg-background rounded border border-primary/20">
+                        <span className="text-sm font-medium">Troco:</span>
+                        <span className="text-lg font-bold text-primary">
+                          R$ {calcularTroco().toFixed(2)}
+                        </span>
                       </div>
                     )}
-
-                    <Button
-                      className="w-full"
-                      size="lg"
-                      onClick={finalizarVenda}
-                      disabled={finalizando}
-                    >
-                      {finalizando ? "Finalizando..." : "Finalizar Venda"}
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => setCarrinho([])}
-                    >
-                      Limpar Carrinho
-                    </Button>
                   </div>
-                </>
-              )}
+                )}
+
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={finalizarVenda}
+                  disabled={finalizando || carrinho.length === 0}
+                >
+                  {finalizando ? "Finalizando..." : "Finalizar Venda"}
+                </Button>
+
+                {carrinho.length > 0 && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setCarrinho([])}
+                  >
+                    Limpar Carrinho
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
