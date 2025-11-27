@@ -24,6 +24,13 @@ import { Download, FileText, Calendar } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { format } from "date-fns";
 
+type ItemVenda = {
+  nome_produto: string;
+  quantidade: number;
+  preco_unitario: number;
+  subtotal: number;
+};
+
 type Venda = {
   id: string;
   created_at: string;
@@ -32,13 +39,7 @@ type Venda = {
   profiles: {
     nome_completo: string;
   } | null;
-};
-
-type ItemVenda = {
-  nome_produto: string;
-  quantidade: number;
-  preco_unitario: number;
-  subtotal: number;
+  itens_venda?: ItemVenda[];
 };
 
 export default function Relatorios() {
@@ -62,7 +63,13 @@ export default function Relatorios() {
           id,
           created_at,
           valor_total,
-          usuario_id
+          usuario_id,
+          itens_venda (
+            nome_produto,
+            quantidade,
+            preco_unitario,
+            subtotal
+          )
         `)
         .order("created_at", { ascending: false });
 
@@ -109,6 +116,7 @@ export default function Relatorios() {
           return {
             ...venda,
             profiles: profile || { nome_completo: "N/A" },
+            itens_venda: venda.itens_venda || [],
           };
         })
       );
@@ -302,18 +310,45 @@ export default function Relatorios() {
                 </TableRow>
               ) : (
                 vendas.map((venda) => (
-                  <TableRow key={venda.id}>
-                    <TableCell>
-                      {format(new Date(venda.created_at), "dd/MM/yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(venda.created_at), "HH:mm")}
-                    </TableCell>
-                    <TableCell>{venda.profiles?.nome_completo || "N/A"}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      R$ {Number(venda.valor_total).toFixed(2)}
-                    </TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={venda.id}>
+                      <TableCell>
+                        {format(new Date(venda.created_at), "dd/MM/yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(venda.created_at), "HH:mm")}
+                      </TableCell>
+                      <TableCell>{venda.profiles?.nome_completo || "N/A"}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        R$ {Number(venda.valor_total).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                    {venda.itens_venda && venda.itens_venda.length > 0 && (
+                      <TableRow key={`${venda.id}-itens`} className="bg-muted/50">
+                        <TableCell colSpan={4} className="py-2">
+                          <div className="pl-4 space-y-1">
+                            <p className="text-xs font-semibold text-muted-foreground mb-2">
+                              Itens da venda:
+                            </p>
+                            {venda.itens_venda.map((item, idx) => (
+                              <div
+                                key={idx}
+                                className="text-sm flex justify-between items-center py-1"
+                              >
+                                <span>
+                                  {item.quantidade}x {item.nome_produto}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  R$ {Number(item.preco_unitario).toFixed(2)} = R${" "}
+                                  {Number(item.subtotal).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 ))
               )}
             </TableBody>
