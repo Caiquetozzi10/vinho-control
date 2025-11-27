@@ -43,7 +43,7 @@ type Venda = {
 };
 
 export default function Relatorios() {
-  const { adegaId } = useUserRole();
+  const { adegaId, role } = useUserRole();
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [loading, setLoading] = useState(true);
   const [periodo, setPeriodo] = useState("hoje");
@@ -185,60 +185,74 @@ export default function Relatorios() {
         </Button>
       </div>
 
-      {/* Filtros */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Período
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>Período</Label>
-              <Select value={periodo} onValueChange={setPeriodo}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hoje">Hoje</SelectItem>
-                  <SelectItem value="7dias">Últimos 7 dias</SelectItem>
-                  <SelectItem value="mes">Mês atual</SelectItem>
-                  <SelectItem value="personalizado">Personalizado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Filtros - Apenas Admin Geral pode mudar o período */}
+      {role === "admin_geral" && (
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Período
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>Período</Label>
+                <Select value={periodo} onValueChange={setPeriodo}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hoje">Hoje</SelectItem>
+                    <SelectItem value="7dias">Últimos 7 dias</SelectItem>
+                    <SelectItem value="mes">Mês atual</SelectItem>
+                    <SelectItem value="personalizado">Personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {periodo === "personalizado" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Data Início</Label>
-                  <Input
-                    type="date"
-                    value={dataInicio}
-                    onChange={(e) => setDataInicio(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Data Fim</Label>
-                  <Input
-                    type="date"
-                    value={dataFim}
-                    onChange={(e) => setDataFim(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
+              {periodo === "personalizado" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Data Início</Label>
+                    <Input
+                      type="date"
+                      value={dataInicio}
+                      onChange={(e) => setDataInicio(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data Fim</Label>
+                    <Input
+                      type="date"
+                      value={dataFim}
+                      onChange={(e) => setDataFim(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
 
-            <div className="flex items-end">
-              <Button onClick={fetchVendas} className="w-full">
-                Aplicar Filtros
-              </Button>
+              <div className="flex items-end">
+                <Button onClick={fetchVendas} className="w-full">
+                  Aplicar Filtros
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Info para Operador */}
+      {role === "operador" && (
+        <Card className="shadow-card bg-primary/5 border-primary/20">
+          <CardContent className="py-4">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Exibindo vendas de hoje
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Cards de Resumo */}
       <div className="grid gap-4 md:grid-cols-3">
