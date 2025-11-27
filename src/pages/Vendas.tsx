@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Search, ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Smartphone, Wallet } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -29,6 +31,8 @@ export default function Vendas() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [finalizando, setFinalizando] = useState(false);
+  const [formaPagamento, setFormaPagamento] = useState<string>("dinheiro");
+  const [valorRecebido, setValorRecebido] = useState<string>("");
 
   useEffect(() => {
     fetchProdutos();
@@ -119,6 +123,12 @@ export default function Vendas() {
     );
   };
 
+  const calcularTroco = () => {
+    const total = calcularTotal();
+    const recebido = parseFloat(valorRecebido) || 0;
+    return recebido - total;
+  };
+
   const finalizarVenda = async () => {
     if (carrinho.length === 0) {
       toast.error("Adicione produtos ao carrinho");
@@ -128,6 +138,15 @@ export default function Vendas() {
     if (!adegaId || !user) {
       toast.error("Erro ao identificar usuário ou adega");
       return;
+    }
+
+    if (formaPagamento === "dinheiro") {
+      const recebido = parseFloat(valorRecebido) || 0;
+      const total = calcularTotal();
+      if (recebido < total) {
+        toast.error("Valor recebido é menor que o total da venda");
+        return;
+      }
     }
 
     setFinalizando(true);
@@ -166,6 +185,8 @@ export default function Vendas() {
 
       toast.success("Venda finalizada com sucesso!");
       setCarrinho([]);
+      setFormaPagamento("dinheiro");
+      setValorRecebido("");
       fetchProdutos();
     } catch (error) {
       console.error("Erro ao finalizar venda:", error);
@@ -190,6 +211,8 @@ export default function Vendas() {
   const novaVenda = () => {
     setCarrinho([]);
     setSearchTerm("");
+    setFormaPagamento("dinheiro");
+    setValorRecebido("");
     toast.success("Novo carrinho iniciado");
   };
 
@@ -309,6 +332,65 @@ export default function Vendas() {
                         R$ {calcularTotal().toFixed(2)}
                       </span>
                     </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold">Forma de Pagamento</Label>
+                      <RadioGroup value={formaPagamento} onValueChange={setFormaPagamento}>
+                        <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                          <RadioGroupItem value="dinheiro" id="dinheiro" />
+                          <Label htmlFor="dinheiro" className="flex items-center gap-2 cursor-pointer flex-1">
+                            <Banknote className="h-4 w-4" />
+                            Dinheiro
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                          <RadioGroupItem value="debito" id="debito" />
+                          <Label htmlFor="debito" className="flex items-center gap-2 cursor-pointer flex-1">
+                            <CreditCard className="h-4 w-4" />
+                            Débito
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                          <RadioGroupItem value="credito" id="credito" />
+                          <Label htmlFor="credito" className="flex items-center gap-2 cursor-pointer flex-1">
+                            <Wallet className="h-4 w-4" />
+                            Crédito
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent cursor-pointer">
+                          <RadioGroupItem value="pix" id="pix" />
+                          <Label htmlFor="pix" className="flex items-center gap-2 cursor-pointer flex-1">
+                            <Smartphone className="h-4 w-4" />
+                            PIX
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {formaPagamento === "dinheiro" && (
+                      <div className="space-y-3 p-3 bg-muted rounded-lg">
+                        <div className="space-y-2">
+                          <Label htmlFor="valorRecebido" className="text-sm">Valor Recebido</Label>
+                          <Input
+                            id="valorRecebido"
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={valorRecebido}
+                            onChange={(e) => setValorRecebido(e.target.value)}
+                            className="text-lg"
+                          />
+                        </div>
+                        {valorRecebido && parseFloat(valorRecebido) >= calcularTotal() && (
+                          <div className="flex justify-between items-center p-2 bg-background rounded border border-primary/20">
+                            <span className="text-sm font-medium">Troco:</span>
+                            <span className="text-lg font-bold text-primary">
+                              R$ {calcularTroco().toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <Button
                       className="w-full"
