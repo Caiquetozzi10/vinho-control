@@ -84,10 +84,16 @@ export default function Produtos() {
   }, [adegaId]);
 
   const fetchProdutos = async () => {
+    if (!adegaId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("produtos")
         .select("*")
+        .eq("adega_id", adegaId)
         .eq("ativo", true)
         .order("nome");
 
