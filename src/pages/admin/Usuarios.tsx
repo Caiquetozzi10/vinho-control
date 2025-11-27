@@ -57,6 +57,7 @@ export default function Usuarios() {
   const [formData, setFormData] = useState({
     nome_completo: "",
     email: "",
+    senha: "",
     telefone: "",
     adega_id: "",
     role: "operador",
@@ -120,12 +121,70 @@ export default function Usuarios() {
     setFormData({
       nome_completo: usuario.nome_completo,
       email: usuario.email,
+      senha: "",
       telefone: usuario.telefone || "",
       adega_id: usuario.adega_id || "",
       role: usuario.user_roles[0]?.role || "operador",
       ativo: usuario.ativo,
     });
     setDialogOpen(true);
+  };
+
+  const handleCreateUsuario = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.senha || formData.senha.length < 6) {
+      toast.error("Senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+
+    try {
+      // Create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.senha,
+        options: {
+          data: {
+            nome_completo: formData.nome_completo,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Falha ao criar usuário");
+
+      // Update profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          nome_completo: formData.nome_completo,
+          telefone: formData.telefone || null,
+          adega_id: formData.adega_id || null,
+          ativo: formData.ativo,
+        })
+        .eq("id", authData.user.id);
+
+      if (profileError) throw profileError;
+
+      // Create role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({
+          user_id: authData.user.id,
+          role: formData.role as "admin_geral" | "gerente_adega" | "operador",
+          adega_id: formData.adega_id || null,
+        });
+
+      if (roleError) throw roleError;
+
+      toast.success("Usuário criado com sucesso!");
+      setDialogOpen(false);
+      resetForm();
+      fetchData();
+    } catch (error: any) {
+      console.error("Erro ao criar usuário:", error);
+      toast.error(error.message || "Erro ao criar usuário");
+    }
   };
 
   const handleUpdateUsuario = async (e: React.FormEvent) => {
@@ -196,6 +255,7 @@ export default function Usuarios() {
     setFormData({
       nome_completo: "",
       email: "",
+      senha: "",
       telefone: "",
       adega_id: "",
       role: "operador",
@@ -232,6 +292,10 @@ export default function Usuarios() {
           <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
           <p className="text-muted-foreground">Administre acessos e permissões</p>
         </div>
+        <Button onClick={() => setDialogOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Novo Usuário
+        </Button>
       </div>
 
       <Card className="shadow-card">
@@ -306,10 +370,12 @@ export default function Usuarios() {
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Editar Usuário</DialogTitle>
-            <DialogDescription>Atualize as informações do usuário</DialogDescription>
+            <DialogTitle>{editingUsuario ? "Editar" : "Criar"} Usuário</DialogTitle>
+            <DialogDescription>
+              {editingUsuario ? "Atualize as informações do usuário" : "Crie um novo usuário no sistema"}
+            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdateUsuario} className="space-y-4">
+          <form onSubmit={editingUsuario ? handleUpdateUsuario : handleCreateUsuario} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="nome_completo">Nome Completo</Label>
@@ -325,8 +391,30 @@ export default function Usuarios() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" value={formData.email} disabled />
+                <Input 
+                  id="email" 
+                  type="email"
+                  value={formData.email} 
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled={!!editingUsuario}
+                  required
+                />
               </div>
+
+              {!editingUsuario && (
+                <div className="space-y-2">
+                  <Label htmlFor="senha">Senha</Label>
+                  <Input
+                    id="senha"
+                    type="password"
+                    value={formData.senha}
+                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                    required
+                    minLength={6}
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="telefone">Telefone</Label>
@@ -403,7 +491,7 @@ export default function Usuarios() {
               >
                 Cancelar
               </Button>
-              <Button type="submit">Atualizar</Button>
+              <Button type="submit">{editingUsuario ? "Atualizar" : "Criar"}</Button>
             </div>
           </form>
         </DialogContent>
