@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Produtos from "./pages/Produtos";
 import Vendas from "./pages/Vendas";
 import Relatorios from "./pages/Relatorios";
+import Categorias from "./pages/Categorias";
 import Adegas from "./pages/admin/Adegas";
 import Usuarios from "./pages/admin/Usuarios";
 import NotFound from "./pages/NotFound";
@@ -60,6 +61,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Relatorios />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/categorias"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Categorias />
                 </DashboardLayout>
               </ProtectedRoute>
             }
