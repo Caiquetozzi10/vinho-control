@@ -7,6 +7,11 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Produtos from "./pages/Produtos";
+import Vendas from "./pages/Vendas";
+import Relatorios from "./pages/Relatorios";
+import Adegas from "./pages/admin/Adegas";
+import Usuarios from "./pages/admin/Usuarios";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +30,56 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/produtos"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Produtos />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vendas"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Vendas />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorios"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Relatorios />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/adegas"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Adegas />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/usuarios"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Usuarios />
                 </DashboardLayout>
               </ProtectedRoute>
             }
