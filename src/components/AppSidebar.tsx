@@ -6,7 +6,8 @@ import {
   Building2, 
   Users, 
   LogOut,
-  Wine
+  Wine,
+  Tags
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -40,6 +41,7 @@ export function AppSidebar() {
   const mainItems = [
     { title: "Dashboard", url: "/", icon: Home },
     { title: "Produtos", url: "/produtos", icon: Package },
+    { title: "Categorias", url: "/categorias", icon: Tags },
     { title: "Vendas", url: "/vendas", icon: ShoppingCart },
     { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
   ];
