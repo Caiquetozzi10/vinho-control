@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,7 @@ type Venda = {
   created_at: string;
   valor_total: number;
   usuario_id: string;
+  forma_pagamento: string;
   profiles: {
     nome_completo: string;
   } | null;
@@ -64,6 +66,7 @@ export default function Relatorios() {
           created_at,
           valor_total,
           usuario_id,
+          forma_pagamento,
           itens_venda (
             nome_produto,
             quantidade,
@@ -138,12 +141,23 @@ export default function Relatorios() {
     return { totalVendas, valorTotal, ticketMedio };
   };
 
+  const formatarFormaPagamento = (forma: string) => {
+    const formas: Record<string, string> = {
+      dinheiro: "Dinheiro",
+      debito: "Débito",
+      credito: "Crédito",
+      pix: "PIX",
+    };
+    return formas[forma] || forma;
+  };
+
   const exportarCSV = () => {
-    const headers = ["Data", "Hora", "Vendedor", "Valor Total"];
+    const headers = ["Data", "Hora", "Vendedor", "Forma Pagamento", "Valor Total"];
     const rows = vendas.map((venda) => [
       format(new Date(venda.created_at), "dd/MM/yyyy"),
       format(new Date(venda.created_at), "HH:mm"),
       venda.profiles?.nome_completo || "N/A",
+      formatarFormaPagamento(venda.forma_pagamento),
       `R$ ${Number(venda.valor_total).toFixed(2)}`,
     ]);
 
@@ -309,13 +323,14 @@ export default function Relatorios() {
                 <TableHead>Data</TableHead>
                 <TableHead>Hora</TableHead>
                 <TableHead>Vendedor</TableHead>
+                <TableHead>Pagamento</TableHead>
                 <TableHead className="text-right">Valor Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
                     <p className="text-muted-foreground">
                       Nenhuma venda encontrada no período
@@ -333,13 +348,18 @@ export default function Relatorios() {
                         {format(new Date(venda.created_at), "HH:mm")}
                       </TableCell>
                       <TableCell>{venda.profiles?.nome_completo || "N/A"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {formatarFormaPagamento(venda.forma_pagamento)}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right font-medium">
                         R$ {Number(venda.valor_total).toFixed(2)}
                       </TableCell>
                     </TableRow>
                     {venda.itens_venda && venda.itens_venda.length > 0 && (
                       <TableRow key={`${venda.id}-itens`} className="bg-muted/50">
-                        <TableCell colSpan={4} className="py-2">
+                        <TableCell colSpan={5} className="py-2">
                           <div className="pl-4 space-y-1">
                             <p className="text-xs font-semibold text-muted-foreground mb-2">
                               Itens da venda:

@@ -302,6 +302,7 @@ export type Database = {
         Row: {
           adega_id: string
           created_at: string
+          forma_pagamento: string
           id: string
           observacoes: string | null
           usuario_id: string
@@ -310,6 +311,7 @@ export type Database = {
         Insert: {
           adega_id: string
           created_at?: string
+          forma_pagamento?: string
           id?: string
           observacoes?: string | null
           usuario_id: string
@@ -318,6 +320,7 @@ export type Database = {
         Update: {
           adega_id?: string
           created_at?: string
+          forma_pagamento?: string
           id?: string
           observacoes?: string | null
           usuario_id?: string
