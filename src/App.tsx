@@ -25,10 +25,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          {/* Rotas apenas para Admin */}
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Dashboard />
                 </DashboardLayout>
@@ -38,13 +39,24 @@ const App = () => (
           <Route
             path="/produtos"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Produtos />
                 </DashboardLayout>
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/categorias"
+            element={
+              <ProtectedRoute adminOnly>
+                <DashboardLayout>
+                  <Categorias />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          {/* Rotas para todos os usuários */}
           <Route
             path="/vendas"
             element={
@@ -65,20 +77,11 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/categorias"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <Categorias />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
+          {/* Rotas de Administração (Admin Geral) */}
           <Route
             path="/admin/adegas"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Adegas />
                 </DashboardLayout>
@@ -88,7 +91,7 @@ const App = () => (
           <Route
             path="/admin/usuarios"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Usuarios />
                 </DashboardLayout>
