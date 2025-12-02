@@ -160,6 +160,7 @@ export default function Vendas() {
             adega_id: adegaId,
             usuario_id: user.id,
             valor_total: calcularTotal(),
+            forma_pagamento: formaPagamento,
           },
         ])
         .select()
