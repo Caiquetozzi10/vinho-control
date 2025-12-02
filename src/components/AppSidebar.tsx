@@ -38,13 +38,18 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path;
 
-  const mainItems = [
-    { title: "Dashboard", url: "/", icon: Home },
-    { title: "Produtos", url: "/produtos", icon: Package },
-    { title: "Categorias", url: "/categorias", icon: Tags },
-    { title: "Vendas", url: "/vendas", icon: ShoppingCart },
-    { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
+  const allMainItems = [
+    { title: "Dashboard", url: "/", icon: Home, adminOnly: true },
+    { title: "Produtos", url: "/produtos", icon: Package, adminOnly: true },
+    { title: "Categorias", url: "/categorias", icon: Tags, adminOnly: true },
+    { title: "Vendas", url: "/vendas", icon: ShoppingCart, adminOnly: false },
+    { title: "Relatórios", url: "/relatorios", icon: BarChart3, adminOnly: false },
   ];
+
+  // Operadores só veem Vendas e Relatórios
+  const mainItems = role === "operador" 
+    ? allMainItems.filter(item => !item.adminOnly)
+    : allMainItems;
 
   const adminItems = [
     { title: "Adegas", url: "/admin/adegas", icon: Building2 },
