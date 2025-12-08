@@ -7,6 +7,7 @@ type AppRole = "admin_geral" | "gerente_adega" | "operador";
 interface UserRoleData {
   role: AppRole | null;
   adegaId: string | null;
+  adegaNome: string | null;
   loading: boolean;
 }
 
@@ -14,6 +15,7 @@ export const useUserRole = (): UserRoleData => {
   const { user } = useAuth();
   const [role, setRole] = useState<AppRole | null>(null);
   const [adegaId, setAdegaId] = useState<string | null>(null);
+  const [adegaNome, setAdegaNome] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +23,7 @@ export const useUserRole = (): UserRoleData => {
       if (!user) {
         setRole(null);
         setAdegaId(null);
+        setAdegaNome(null);
         setLoading(false);
         return;
       }
@@ -36,6 +39,19 @@ export const useUserRole = (): UserRoleData => {
         if (roleData) {
           setRole(roleData.role as AppRole);
           setAdegaId(roleData.adega_id);
+
+          // Fetch adega name if adega_id exists
+          if (roleData.adega_id) {
+            const { data: adegaData } = await supabase
+              .from("adegas")
+              .select("nome")
+              .eq("id", roleData.adega_id)
+              .single();
+            
+            if (adegaData) {
+              setAdegaNome(adegaData.nome);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
@@ -47,5 +63,5 @@ export const useUserRole = (): UserRoleData => {
     fetchUserRole();
   }, [user]);
 
-  return { role, adegaId, loading };
+  return { role, adegaId, adegaNome, loading };
 };

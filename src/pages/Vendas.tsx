@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,15 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Smartphone, Wallet } from "lucide-react";
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Smartphone, Wallet, Barcode } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
+import { ReciboPrint } from "@/components/ReciboPrint";
 
 type Produto = {
   id: string;
   nome: string;
   preco_venda: number;
   quantidade_estoque: number;
+  codigo_barras?: string | null;
 };
 
 type ItemCarrinho = {
@@ -23,8 +25,19 @@ type ItemCarrinho = {
   quantidade: number;
 };
 
+type DadosRecibo = {
+  nomeAdega: string;
+  itens: { nome: string; quantidade: number; preco_unitario: number; subtotal: number }[];
+  total: number;
+  formaPagamento: string;
+  valorRecebido?: number;
+  troco?: number;
+  vendedor: string;
+  data: Date;
+};
+
 export default function Vendas() {
-  const { adegaId } = useUserRole();
+  const { adegaId, adegaNome } = useUserRole();
   const { user } = useAuth();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
@@ -33,6 +46,11 @@ export default function Vendas() {
   const [finalizando, setFinalizando] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState<string>("dinheiro");
   const [valorRecebido, setValorRecebido] = useState<string>("");
+  const [codigoBarras, setCodigoBarras] = useState("");
+  const [dadosRecibo, setDadosRecibo] = useState<DadosRecibo | null>(null);
+  const reciboEstabelecimentoRef = useRef<HTMLDivElement>(null);
+  const reciboClienteRef = useRef<HTMLDivElement>(null);
+  const codigoBarrasInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProdutos();
@@ -47,7 +65,7 @@ export default function Vendas() {
     try {
       const { data, error } = await supabase
         .from("produtos")
-        .select("id, nome, preco_venda, quantidade_estoque")
+        .select("id, nome, preco_venda, quantidade_estoque, codigo_barras")
         .eq("adega_id", adegaId)
         .eq("ativo", true)
         .gt("quantidade_estoque", 0)
@@ -129,6 +147,133 @@ export default function Vendas() {
     return recebido - total;
   };
 
+  // Buscar produto por código de barras
+  const buscarPorCodigoBarras = (codigo: string) => {
+    if (!codigo.trim()) return;
+    
+    const produto = produtos.find((p) => p.codigo_barras === codigo.trim());
+    
+    if (produto) {
+      adicionarAoCarrinho(produto);
+      setCodigoBarras("");
+    } else {
+      toast.error("Produto não encontrado com este código de barras");
+    }
+    
+    // Manter foco no input de código de barras
+    codigoBarrasInputRef.current?.focus();
+  };
+
+  // Função para impressão do recibo
+  const imprimirRecibos = (dados: DadosRecibo) => {
+    const printWindow = window.open("", "_blank", "width=320,height=600");
+    if (!printWindow) {
+      toast.error("Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.");
+      return;
+    }
+
+    const formatarFormaPagamento = (forma: string) => {
+      const formas: Record<string, string> = {
+        dinheiro: "Dinheiro",
+        debito: "Cartão Débito",
+        credito: "Cartão Crédito",
+        pix: "PIX",
+      };
+      return formas[forma] || forma;
+    };
+
+    const gerarReciboHTML = (via: string) => `
+      <div style="width: 80mm; padding: 10px; font-family: monospace; font-size: 12px;">
+        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
+          <h1 style="margin: 0; font-size: 16px; text-transform: uppercase;">${dados.nomeAdega}</h1>
+          <p style="margin: 4px 0; font-size: 10px;">CUPOM NÃO FISCAL</p>
+          <p style="margin: 4px 0; font-size: 11px; font-weight: bold;">Via ${via}</p>
+        </div>
+        
+        <div style="border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; font-size: 10px;">
+          <p style="margin: 2px 0;">Data: ${dados.data.toLocaleDateString("pt-BR")} ${dados.data.toLocaleTimeString("pt-BR")}</p>
+          <p style="margin: 2px 0;">Vendedor: ${dados.vendedor}</p>
+        </div>
+        
+        <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid #000;">
+              <th style="text-align: left; padding: 4px 0;">Item</th>
+              <th style="text-align: center;">Qtd</th>
+              <th style="text-align: right;">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${dados.itens.map(item => `
+              <tr>
+                <td style="padding: 2px 0; text-align: left; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.nome}</td>
+                <td style="text-align: center;">${item.quantidade}</td>
+                <td style="text-align: right;">R$ ${item.subtotal.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div style="border-top: 1px dashed #000; margin-top: 8px; padding-top: 8px;">
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px;">
+            <span>TOTAL:</span>
+            <span>R$ ${dados.total.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 4px;">
+            <span>Pagamento:</span>
+            <span>${formatarFormaPagamento(dados.formaPagamento)}</span>
+          </div>
+          ${dados.formaPagamento === "dinheiro" && dados.valorRecebido ? `
+            <div style="display: flex; justify-content: space-between; font-size: 10px;">
+              <span>Recebido:</span>
+              <span>R$ ${dados.valorRecebido.toFixed(2)}</span>
+            </div>
+            ${dados.troco && dados.troco > 0 ? `
+              <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold;">
+                <span>Troco:</span>
+                <span>R$ ${dados.troco.toFixed(2)}</span>
+              </div>
+            ` : ''}
+          ` : ''}
+        </div>
+        
+        <div style="text-align: center; font-size: 10px; margin-top: 16px;">
+          <p style="margin: 0;">Obrigado pela preferência!</p>
+          <p style="margin: 8px 0;">--------------------------------</p>
+        </div>
+      </div>
+    `;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Recibo</title>
+        <style>
+          @media print {
+            body { margin: 0; }
+            .page-break { page-break-after: always; }
+          }
+        </style>
+      </head>
+      <body>
+        ${gerarReciboHTML("Estabelecimento")}
+        <div class="page-break"></div>
+        ${gerarReciboHTML("Cliente")}
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() {
+              window.close();
+            };
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const finalizarVenda = async () => {
     if (carrinho.length === 0) {
       toast.error("Adicione produtos ao carrinho");
@@ -184,6 +329,26 @@ export default function Vendas() {
 
       if (itensError) throw itensError;
 
+      // Preparar dados do recibo e imprimir
+      const dadosReciboAtual: DadosRecibo = {
+        nomeAdega: adegaNome || "Adega",
+        itens: carrinho.map((item) => ({
+          nome: item.produto.nome,
+          quantidade: item.quantidade,
+          preco_unitario: item.produto.preco_venda,
+          subtotal: item.produto.preco_venda * item.quantidade,
+        })),
+        total: calcularTotal(),
+        formaPagamento,
+        valorRecebido: formaPagamento === "dinheiro" ? parseFloat(valorRecebido) || 0 : undefined,
+        troco: formaPagamento === "dinheiro" ? calcularTroco() : undefined,
+        vendedor: user.email || "Operador",
+        data: new Date(),
+      };
+
+      // Imprimir recibos
+      imprimirRecibos(dadosReciboAtual);
+
       toast.success("Venda finalizada com sucesso!");
       setCarrinho([]);
       setFormaPagamento("dinheiro");
@@ -233,10 +398,44 @@ export default function Vendas() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de Produtos */}
         <div className="lg:col-span-2 space-y-4">
+          {/* Input para leitor de código de barras */}
+          <Card className="border-primary/50 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Barcode className="h-5 w-5 text-primary shrink-0" />
+                <div className="relative flex-1">
+                  <Input
+                    ref={codigoBarrasInputRef}
+                    placeholder="Escanear código de barras..."
+                    value={codigoBarras}
+                    onChange={(e) => setCodigoBarras(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        buscarPorCodigoBarras(codigoBarras);
+                      }
+                    }}
+                    className="text-lg"
+                    autoFocus
+                  />
+                </div>
+                <Button
+                  onClick={() => buscarPorCodigoBarras(codigoBarras)}
+                  variant="secondary"
+                >
+                  Adicionar
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Use o leitor de código de barras ou digite o código manualmente e pressione Enter
+              </p>
+            </CardContent>
+          </Card>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar produtos..."
+              placeholder="Buscar produtos por nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
