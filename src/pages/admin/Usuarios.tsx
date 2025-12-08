@@ -304,7 +304,7 @@ export default function Usuarios() {
       case "admin_geral":
         return <Badge className="bg-primary">Admin Geral</Badge>;
       case "gerente_adega":
-        return <Badge className="bg-accent">Gerente</Badge>;
+        return <Badge className="bg-accent">Admin Loja</Badge>;
       case "operador":
         return <Badge variant="secondary">Operador</Badge>;
       default:
@@ -497,6 +497,7 @@ export default function Usuarios() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin_geral">Admin Geral</SelectItem>
+                    <SelectItem value="gerente_adega">Admin Loja</SelectItem>
                     <SelectItem value="operador">Operador</SelectItem>
                   </SelectContent>
                 </Select>
