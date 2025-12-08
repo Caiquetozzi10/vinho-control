@@ -45,9 +45,14 @@ export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRoutePr
     return <Navigate to="/login" replace />;
   }
 
-  // Se a rota é apenas para admin e o usuário é operador, redireciona para vendas
+  // Operador só tem acesso a Vendas e Relatórios
   if (adminOnly && role === "operador") {
     return <Navigate to="/vendas" replace />;
+  }
+
+  // Gerente de adega (Admin Loja) não tem acesso às rotas de administração
+  if (location.pathname.startsWith("/admin") && role === "gerente_adega") {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
