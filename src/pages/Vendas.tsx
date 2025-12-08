@@ -398,72 +398,64 @@ export default function Vendas() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de Produtos */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Input para leitor de código de barras */}
-          <Card className="border-primary/50 bg-primary/5">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Barcode className="h-5 w-5 text-primary shrink-0" />
-                <div className="relative flex-1">
-                  <Input
-                    ref={codigoBarrasInputRef}
-                    placeholder="Escanear código de barras..."
-                    value={codigoBarras}
-                    onChange={(e) => setCodigoBarras(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        buscarPorCodigoBarras(codigoBarras);
-                      }
-                    }}
-                    className="text-lg"
-                    autoFocus
-                  />
-                </div>
-                <Button
-                  onClick={() => buscarPorCodigoBarras(codigoBarras)}
-                  variant="secondary"
-                >
-                  Adicionar
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Use o leitor de código de barras ou digite o código manualmente e pressione Enter
-              </p>
-            </CardContent>
-          </Card>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar produtos por nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Barra de busca e código de barras */}
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar produtos por nome..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="relative flex-1">
+              <Barcode className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                ref={codigoBarrasInputRef}
+                placeholder="Código de barras..."
+                value={codigoBarras}
+                onChange={(e) => setCodigoBarras(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    buscarPorCodigoBarras(codigoBarras);
+                  }
+                }}
+                className="pl-10"
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredProdutos.map((produto) => (
-              <Card
-                key={produto.id}
-                className="shadow-card hover:shadow-md transition-smooth cursor-pointer"
-                onClick={() => adicionarAoCarrinho(produto)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">{produto.nome}</CardTitle>
-                    <Badge variant="secondary">
-                      {produto.quantidade_estoque} un.
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">
-                    R$ {produto.preco_venda.toFixed(2)}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          {/* Grid de produtos */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {filteredProdutos.length === 0 ? (
+              <p className="col-span-full text-center text-muted-foreground py-8">
+                Nenhum produto encontrado
+              </p>
+            ) : (
+              filteredProdutos.map((produto) => (
+                <Card
+                  key={produto.id}
+                  className="shadow-card hover:shadow-md transition-smooth cursor-pointer hover:border-primary/50"
+                  onClick={() => adicionarAoCarrinho(produto)}
+                >
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle className="text-sm line-clamp-2">{produto.nome}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold text-primary">
+                        R$ {produto.preco_venda.toFixed(2)}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        {produto.quantidade_estoque}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
 
