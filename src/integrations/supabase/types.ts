@@ -22,6 +22,7 @@ export type Database = {
           email: string | null
           endereco: string | null
           id: string
+          logo_url: string | null
           nome: string
           status_pagamento: Database["public"]["Enums"]["payment_status"]
           telefone: string | null
@@ -34,6 +35,7 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           id?: string
+          logo_url?: string | null
           nome: string
           status_pagamento?: Database["public"]["Enums"]["payment_status"]
           telefone?: string | null
@@ -46,6 +48,7 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           id?: string
+          logo_url?: string | null
           nome?: string
           status_pagamento?: Database["public"]["Enums"]["payment_status"]
           telefone?: string | null

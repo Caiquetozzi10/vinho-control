@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { 
   Home, 
   Package, 
@@ -13,6 +14,7 @@ import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -27,16 +29,45 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
+type AdegaInfo = {
+  nome: string;
+  logo_url: string | null;
+};
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const { role } = useUserRole();
+  const { role, adegaId } = useUserRole();
   const { signOut } = useAuth();
   const currentPath = location.pathname;
+  const [adegaInfo, setAdegaInfo] = useState<AdegaInfo | null>(null);
   
   const isCollapsed = state === "collapsed";
 
   const isActive = (path: string) => currentPath === path;
+
+  useEffect(() => {
+    const fetchAdegaInfo = async () => {
+      if (!adegaId) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("adegas")
+          .select("nome, logo_url")
+          .eq("id", adegaId)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) {
+          setAdegaInfo(data);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar informações da adega:", error);
+      }
+    };
+
+    fetchAdegaInfo();
+  }, [adegaId]);
 
   // Itens disponíveis para cada perfil
   const getMainItems = () => {
@@ -64,16 +95,28 @@ export function AppSidebar() {
     { title: "Usuários", url: "/admin/usuarios", icon: Users },
   ];
 
+  // Determinar o nome e logo a exibir
+  const displayName = adegaInfo?.nome || "AdegaStock";
+  const displayLogo = adegaInfo?.logo_url;
+
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-64"}>
       <SidebarContent>
         {/* Logo */}
         <div className="px-4 py-6 border-b border-sidebar-border">
           <div className="flex items-center gap-2">
-            <Wine className="h-6 w-6 text-primary" />
+            {displayLogo ? (
+              <img 
+                src={displayLogo} 
+                alt={displayName}
+                className="h-8 w-8 rounded-lg object-cover"
+              />
+            ) : (
+              <Wine className="h-6 w-6 text-primary" />
+            )}
             {!isCollapsed && (
-              <span className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
-                AdegaStock
+              <span className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
+                {displayName}
               </span>
             )}
           </div>
