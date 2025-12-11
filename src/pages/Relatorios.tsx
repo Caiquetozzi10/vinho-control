@@ -48,7 +48,9 @@ export default function Relatorios() {
   const { adegaId, role } = useUserRole();
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [loading, setLoading] = useState(true);
-  const [periodo, setPeriodo] = useState("3meses");
+  // Operadores só veem relatório do dia
+  const defaultPeriodo = role === "operador" ? "dia" : "3meses";
+  const [periodo, setPeriodo] = useState(defaultPeriodo);
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
@@ -218,18 +220,24 @@ export default function Relatorios() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="space-y-2">
               <Label>Período</Label>
-              <Select value={periodo} onValueChange={setPeriodo}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dia">Hoje</SelectItem>
-                  <SelectItem value="semana">Esta Semana</SelectItem>
-                  <SelectItem value="mes">Este Mês</SelectItem>
-                  <SelectItem value="3meses">Últimos 3 Meses</SelectItem>
-                  <SelectItem value="personalizado">Personalizado</SelectItem>
-                </SelectContent>
-              </Select>
+              {role === "operador" ? (
+                <div className="flex items-center h-10 px-3 rounded-md border bg-muted text-sm">
+                  Hoje
+                </div>
+              ) : (
+                <Select value={periodo} onValueChange={setPeriodo}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dia">Hoje</SelectItem>
+                    <SelectItem value="semana">Esta Semana</SelectItem>
+                    <SelectItem value="mes">Este Mês</SelectItem>
+                    <SelectItem value="3meses">Últimos 3 Meses</SelectItem>
+                    <SelectItem value="personalizado">Personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             {periodo === "personalizado" && (
