@@ -218,13 +218,9 @@ export default function Relatorios() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="space-y-2">
-              <Label>Período</Label>
-              {role === "operador" ? (
-                <div className="flex items-center h-10 px-3 rounded-md border bg-muted text-sm">
-                  Hoje
-                </div>
-              ) : (
+            {role !== "operador" && (
+              <div className="space-y-2">
+                <Label>Período</Label>
                 <Select value={periodo} onValueChange={setPeriodo}>
                   <SelectTrigger>
                     <SelectValue />
@@ -237,10 +233,10 @@ export default function Relatorios() {
                     <SelectItem value="personalizado">Personalizado</SelectItem>
                   </SelectContent>
                 </Select>
-              )}
-            </div>
+              </div>
+            )}
 
-            {periodo === "personalizado" && (
+            {periodo === "personalizado" && role !== "operador" && (
               <>
                 <div className="space-y-2">
                   <Label>Data Início</Label>
