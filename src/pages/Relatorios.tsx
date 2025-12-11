@@ -208,17 +208,17 @@ export default function Relatorios() {
         </Button>
       </div>
 
-      {/* Filtros de Período - Disponível para todos os perfis */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Período
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {role !== "operador" && (
+      {/* Filtros de Período - Oculto para operadores */}
+      {role !== "operador" && (
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Período
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="space-y-2">
                 <Label>Período</Label>
                 <Select value={periodo} onValueChange={setPeriodo}>
@@ -234,37 +234,37 @@ export default function Relatorios() {
                   </SelectContent>
                 </Select>
               </div>
-            )}
 
-            {periodo === "personalizado" && role !== "operador" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Data Início</Label>
-                  <Input
-                    type="date"
-                    value={dataInicio}
-                    onChange={(e) => setDataInicio(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Data Fim</Label>
-                  <Input
-                    type="date"
-                    value={dataFim}
-                    onChange={(e) => setDataFim(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
+              {periodo === "personalizado" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Data Início</Label>
+                    <Input
+                      type="date"
+                      value={dataInicio}
+                      onChange={(e) => setDataInicio(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data Fim</Label>
+                    <Input
+                      type="date"
+                      value={dataFim}
+                      onChange={(e) => setDataFim(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
 
-            <div className="flex items-end">
-              <Button onClick={fetchVendas} className="w-full">
-                Aplicar Filtros
-              </Button>
+              <div className="flex items-end">
+                <Button onClick={fetchVendas} className="w-full">
+                  Aplicar Filtros
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Cards de Resumo */}
       <div className="grid gap-4 md:grid-cols-3">
