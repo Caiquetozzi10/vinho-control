@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Edit, Building2 } from "lucide-react";
+import { Plus, Edit, Building2, Upload, X, Image } from "lucide-react";
 import { z } from "zod";
 
 const adegaSchema = z.object({
@@ -46,6 +46,7 @@ type Adega = {
   status_pagamento: string;
   ativo: boolean;
   data_ultimo_pagamento: string | null;
+  logo_url: string | null;
 };
 
 export default function Adegas() {
@@ -53,6 +54,9 @@ export default function Adegas() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAdega, setEditingAdega] = useState<Adega | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -61,6 +65,7 @@ export default function Adegas() {
     endereco: "",
     status_pagamento: "aguardando",
     ativo: true,
+    logo_url: "",
   });
 
   useEffect(() => {
@@ -81,6 +86,58 @@ export default function Adegas() {
       toast.error("Erro ao carregar adegas");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith("image/")) {
+      toast.error("Por favor, selecione uma imagem");
+      return;
+    }
+
+    // Validar tamanho (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 2MB");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("adega-logos")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("adega-logos")
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, logo_url: publicUrl });
+      setPreviewUrl(publicUrl);
+      toast.success("Logo enviado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao enviar logo:", error);
+      toast.error("Erro ao enviar logo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setFormData({ ...formData, logo_url: "" });
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -107,6 +164,7 @@ export default function Adegas() {
         endereco: formData.endereco || null,
         status_pagamento: formData.status_pagamento as "ativo" | "aguardando" | "bloqueado",
         ativo: formData.ativo,
+        logo_url: formData.logo_url || null,
       };
 
       if (editingAdega) {
@@ -142,7 +200,9 @@ export default function Adegas() {
       endereco: adega.endereco || "",
       status_pagamento: adega.status_pagamento,
       ativo: adega.ativo,
+      logo_url: adega.logo_url || "",
     });
+    setPreviewUrl(adega.logo_url || null);
     setDialogOpen(true);
   };
 
@@ -154,8 +214,13 @@ export default function Adegas() {
       endereco: "",
       status_pagamento: "aguardando",
       ativo: true,
+      logo_url: "",
     });
     setEditingAdega(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -209,13 +274,74 @@ export default function Adegas() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Upload de Logo */}
+              <div className="space-y-2">
+                <Label>Logo da Adega</Label>
+                <div className="flex items-center gap-4">
+                  {previewUrl ? (
+                    <div className="relative">
+                      <img
+                        src={previewUrl}
+                        alt="Logo preview"
+                        className="h-20 w-20 rounded-lg object-cover border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={handleRemoveLogo}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center">
+                      <Image className="h-8 w-8 text-muted-foreground/50" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Enviar Logo
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG até 2MB. O logo será exibido para todos os usuários da adega.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 space-y-2">
-                  <Label htmlFor="nome">Nome *</Label>
+                  <Label htmlFor="nome">Nome da Adega *</Label>
                   <Input
                     id="nome"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Ex: Adega do João"
                     required
                   />
                 </div>
@@ -297,7 +423,7 @@ export default function Adegas() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={uploading}>
                   {editingAdega ? "Atualizar" : "Cadastrar"}
                 </Button>
               </div>
@@ -310,6 +436,7 @@ export default function Adegas() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Logo</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>E-mail</TableHead>
               <TableHead>Telefone</TableHead>
@@ -321,7 +448,7 @@ export default function Adegas() {
           <TableBody>
             {adegas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   <Building2 className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
                   <p className="text-muted-foreground">Nenhuma adega cadastrada</p>
                 </TableCell>
@@ -329,6 +456,19 @@ export default function Adegas() {
             ) : (
               adegas.map((adega) => (
                 <TableRow key={adega.id}>
+                  <TableCell>
+                    {adega.logo_url ? (
+                      <img
+                        src={adega.logo_url}
+                        alt={`Logo ${adega.nome}`}
+                        className="h-10 w-10 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                        <Building2 className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">{adega.nome}</TableCell>
                   <TableCell>{adega.email || "-"}</TableCell>
                   <TableCell>{adega.telefone || "-"}</TableCell>
