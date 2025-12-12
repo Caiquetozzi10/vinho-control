@@ -8,12 +8,14 @@ import {
   Users, 
   LogOut,
   Wine,
-  Tags
+  Tags,
+  Crown
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdegaPlan } from "@/hooks/useAdegaPlan";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -28,6 +30,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 type AdegaInfo = {
   nome: string;
@@ -39,10 +42,12 @@ export function AppSidebar() {
   const location = useLocation();
   const { role, adegaId } = useUserRole();
   const { signOut } = useAuth();
+  const { plano, isLoading: planLoading } = useAdegaPlan();
   const currentPath = location.pathname;
   const [adegaInfo, setAdegaInfo] = useState<AdegaInfo | null>(null);
   
   const isCollapsed = state === "collapsed";
+  const isAdminGeral = role === 'admin_geral';
 
   const isActive = (path: string) => currentPath === path;
 
@@ -115,9 +120,20 @@ export function AppSidebar() {
               <Wine className="h-6 w-6 text-primary" />
             )}
             {!isCollapsed && (
-              <span className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
-                {displayName}
-              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
+                  {displayName}
+                </span>
+                {!isAdminGeral && !planLoading && (
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs w-fit ${plano === 'ouro' ? 'border-gold text-gold' : 'border-silver text-silver'}`}
+                  >
+                    <Crown className="w-3 h-3 mr-1" />
+                    {plano === 'ouro' ? 'Ouro' : 'Prata'}
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
         </div>
