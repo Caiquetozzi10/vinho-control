@@ -199,8 +199,8 @@ export default function Assinatura() {
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground text-center">
             Precisa de ajuda com sua assinatura? Entre em contato pelo email{" "}
-            <a href="mailto:suporte@adegacontrol.com" className="text-primary hover:underline">
-              suporte@adegacontrol.com
+            <a href="mailto:contato@techonesolutions.com.br" className="text-primary hover:underline">
+              contato@techonesolutions.com.br
             </a>
           </p>
         </CardContent>
