@@ -9,7 +9,8 @@ import {
   LogOut,
   Wine,
   Tags,
-  Crown
+  Crown,
+  CreditCard
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -86,6 +87,7 @@ export function AppSidebar() {
       { title: "Produtos", url: "/produtos", icon: Package },
       { title: "Categorias", url: "/categorias", icon: Tags },
       ...baseItems,
+      { title: "Assinatura", url: "/assinatura", icon: CreditCard },
     ];
 
     if (role === "operador") return baseItems;
