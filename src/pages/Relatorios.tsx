@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -21,8 +22,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Download, FileText, Calendar } from "lucide-react";
+import { Download, FileText, Calendar, Crown, Lock, TrendingUp, BarChart3 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAdegaPlan } from "@/hooks/useAdegaPlan";
 import { format } from "date-fns";
 
 type ItemVenda = {
@@ -46,6 +48,7 @@ type Venda = {
 
 export default function Relatorios() {
   const { adegaId, role } = useUserRole();
+  const { plano, temRelatoriosAvancados, isLoading: planLoading } = useAdegaPlan();
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [loading, setLoading] = useState(true);
   // Operadores só veem relatório do dia
@@ -185,6 +188,38 @@ export default function Relatorios() {
     toast.success("Relatório exportado com sucesso!");
   };
 
+  // Advanced analytics functions (Plano Ouro)
+  const getMostSoldProduct = () => {
+    const productCounts: Record<string, number> = {};
+    vendas.forEach(venda => {
+      venda.itens_venda?.forEach(item => {
+        productCounts[item.nome_produto] = (productCounts[item.nome_produto] || 0) + item.quantidade;
+      });
+    });
+    const sorted = Object.entries(productCounts).sort(([,a], [,b]) => b - a);
+    return sorted[0]?.[0] || "N/A";
+  };
+
+  const getMostUsedPaymentMethod = () => {
+    const methodCounts: Record<string, number> = {};
+    vendas.forEach(venda => {
+      methodCounts[venda.forma_pagamento] = (methodCounts[venda.forma_pagamento] || 0) + 1;
+    });
+    const sorted = Object.entries(methodCounts).sort(([,a], [,b]) => b - a);
+    return sorted[0] ? formatarFormaPagamento(sorted[0][0]) : "N/A";
+  };
+
+  const getBestDayOfWeek = () => {
+    const dayCounts: Record<number, number> = {};
+    const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    vendas.forEach(venda => {
+      const day = new Date(venda.created_at).getDay();
+      dayCounts[day] = (dayCounts[day] || 0) + Number(venda.valor_total);
+    });
+    const sorted = Object.entries(dayCounts).sort(([,a], [,b]) => b - a);
+    return sorted[0] ? dayNames[parseInt(sorted[0][0])] : "N/A";
+  };
+
   const { totalVendas, valorTotal, ticketMedio } = calcularTotais();
 
   if (loading) {
@@ -305,6 +340,80 @@ export default function Relatorios() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Relatórios Avançados - Apenas Plano Ouro */}
+      <Card className={`shadow-card ${!temRelatoriosAvancados ? 'opacity-75' : ''}`}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Relatórios Avançados
+              {!temRelatoriosAvancados && (
+                <Badge className="bg-gold text-primary-foreground ml-2">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Plano Ouro
+                </Badge>
+              )}
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {temRelatoriosAvancados ? (
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="bg-muted/50">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="h-8 w-8 text-success" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Produto Mais Vendido</p>
+                      <p className="font-semibold">
+                        {vendas.length > 0 ? getMostSoldProduct() : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/50">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-3">
+                    <BarChart3 className="h-8 w-8 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Forma de Pagamento Preferida</p>
+                      <p className="font-semibold">{getMostUsedPaymentMethod()}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/50">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-8 w-8 text-accent" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Melhor Dia da Semana</p>
+                      <p className="font-semibold">{getBestDayOfWeek()}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Lock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Recurso exclusivo do Plano Ouro</h3>
+              <p className="text-muted-foreground mb-4">
+                Acesse relatórios avançados com análises de produtos mais vendidos, 
+                formas de pagamento e tendências de vendas.
+              </p>
+              <a href="/landing">
+                <Button className="bg-gold hover:bg-gold/90 text-primary-foreground">
+                  <Crown className="w-4 h-4 mr-2" />
+                  Fazer Upgrade para Ouro
+                </Button>
+              </a>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Tabela de Vendas */}
       <Card className="shadow-card">

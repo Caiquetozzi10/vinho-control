@@ -28,8 +28,11 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Plus, Edit, Users as UsersIcon, UserX, Key } from "lucide-react";
+import { Plus, Edit, Users as UsersIcon, UserX, Key, AlertTriangle, Crown } from "lucide-react";
+import { useAdegaPlan } from "@/hooks/useAdegaPlan";
+import { useUserRole } from "@/hooks/useUserRole";
 
 type Profile = {
   id: string;
@@ -57,6 +60,10 @@ export default function Usuarios() {
   const [resetPasswordUsuario, setResetPasswordUsuario] = useState<Profile | null>(null);
   const [newPassword, setNewPassword] = useState("");
 
+  const { plano, maxOperadores, isLoading: planLoading } = useAdegaPlan();
+  const { adegaId, role } = useUserRole();
+  const isAdminGeral = role === 'admin_geral';
+
   const [formData, setFormData] = useState({
     nome_completo: "",
     email: "",
@@ -66,6 +73,13 @@ export default function Usuarios() {
     role: "operador",
     ativo: true,
   });
+
+  // Count operators in current adega
+  const operadoresCount = usuarios.filter(
+    u => u.adega_id === adegaId && u.user_roles.some(r => r.role === 'operador')
+  ).length;
+  
+  const canAddOperator = isAdminGeral || operadoresCount < maxOperadores;
 
   useEffect(() => {
     fetchData();
@@ -135,6 +149,12 @@ export default function Usuarios() {
 
   const handleCreateUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check operator limit for non-admin users
+    if (!isAdminGeral && formData.role === 'operador' && !canAddOperator) {
+      toast.error(`Limite de ${maxOperadores} operadores atingido. Faça upgrade para o Plano Ouro.`);
+      return;
+    }
 
     if (!formData.senha || formData.senha.length < 6) {
       toast.error("Senha deve ter no mínimo 6 caracteres");
@@ -327,11 +347,40 @@ export default function Usuarios() {
           <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
           <p className="text-muted-foreground">Administre acessos e permissões</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Usuário
-        </Button>
+        <div className="flex items-center gap-4">
+          {!isAdminGeral && (
+            <div className="flex items-center gap-2 text-sm">
+              <Badge variant={plano === 'ouro' ? 'default' : 'secondary'} className={plano === 'ouro' ? 'bg-gold' : 'bg-silver'}>
+                <Crown className="w-3 h-3 mr-1" />
+                Plano {plano === 'ouro' ? 'Ouro' : 'Prata'}
+              </Badge>
+              <span className="text-muted-foreground">
+                {operadoresCount}/{maxOperadores === Infinity ? '∞' : maxOperadores} operadores
+              </span>
+            </div>
+          )}
+          <Button 
+            onClick={() => setDialogOpen(true)} 
+            className="gap-2"
+            disabled={!isAdminGeral && !canAddOperator}
+          >
+            <Plus className="h-4 w-4" />
+            Novo Usuário
+          </Button>
+        </div>
       </div>
+
+      {!isAdminGeral && !canAddOperator && (
+        <Alert className="border-gold/50 bg-gold/10">
+          <AlertTriangle className="h-4 w-4 text-gold" />
+          <AlertDescription className="text-foreground">
+            Você atingiu o limite de {maxOperadores} operadores do Plano Prata. 
+            <a href="/landing" className="ml-1 text-gold hover:underline font-medium">
+              Faça upgrade para o Plano Ouro
+            </a> para adicionar operadores ilimitados.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card className="shadow-card">
         <Table>

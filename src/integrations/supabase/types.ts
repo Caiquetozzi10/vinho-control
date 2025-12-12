@@ -24,7 +24,10 @@ export type Database = {
           id: string
           logo_url: string | null
           nome: string
+          plano: Database["public"]["Enums"]["subscription_plan"]
           status_pagamento: Database["public"]["Enums"]["payment_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           telefone: string | null
           updated_at: string
         }
@@ -37,7 +40,10 @@ export type Database = {
           id?: string
           logo_url?: string | null
           nome: string
+          plano?: Database["public"]["Enums"]["subscription_plan"]
           status_pagamento?: Database["public"]["Enums"]["payment_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           telefone?: string | null
           updated_at?: string
         }
@@ -50,7 +56,10 @@ export type Database = {
           id?: string
           logo_url?: string | null
           nome?: string
+          plano?: Database["public"]["Enums"]["subscription_plan"]
           status_pagamento?: Database["public"]["Enums"]["payment_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           telefone?: string | null
           updated_at?: string
         }
@@ -364,6 +373,7 @@ export type Database = {
         | "energetica"
         | "gelo"
         | "outros"
+      subscription_plan: "prata" | "ouro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -501,6 +511,7 @@ export const Constants = {
         "gelo",
         "outros",
       ],
+      subscription_plan: ["prata", "ouro"],
     },
   },
 } as const

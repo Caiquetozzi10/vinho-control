@@ -53,7 +53,12 @@ serve(async (req) => {
     
     // Check if it's the gold plan
     const isGoldPlan = priceId === "price_1SdMCI056ZndHVpeLiqbs6mU";
-    logStep("Plan determined", { priceId, isGoldPlan });
+    const plano = isGoldPlan ? 'ouro' : 'prata';
+    logStep("Plan determined", { priceId, plano });
+
+    // Get customer ID from session
+    const stripeCustomerId = session.customer as string;
+    const stripeSubscriptionId = session.subscription as string;
 
     // Create the adega first
     const { data: adegaData, error: adegaError } = await supabase
@@ -62,6 +67,9 @@ serve(async (req) => {
         nome: nomeAdega,
         status_pagamento: 'ativo',
         data_ultimo_pagamento: new Date().toISOString(),
+        plano: plano,
+        stripe_customer_id: stripeCustomerId,
+        stripe_subscription_id: stripeSubscriptionId,
       })
       .select()
       .single();
