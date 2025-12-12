@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
 import Landing from "./pages/Landing";
 import Signup from "./pages/Signup";
+import CadastroSucesso from "./pages/CadastroSucesso";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Produtos from "./pages/Produtos";
@@ -28,6 +29,7 @@ const App = () => (
         <Routes>
           <Route path="/landing" element={<Landing />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/cadastro-sucesso" element={<CadastroSucesso />} />
           <Route path="/login" element={<Login />} />
           {/* Rotas apenas para Admin */}
           <Route

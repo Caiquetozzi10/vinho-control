@@ -108,21 +108,35 @@ const Signup = () => {
     if (step > 1) setStep(step - 1);
   };
 
+  const PRICE_IDS = {
+    prata: "price_1SdMAE056ZndHVpeI0NNl7IC",
+    ouro: "price_1SdMCI056ZndHVpeLiqbs6mU",
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
 
     try {
-      // TODO: Integrate with Stripe for payment
-      // For now, just create the account and show a message about payment integration
+      const priceId = PRICE_IDS[plano as keyof typeof PRICE_IDS];
       
-      toast({
-        title: "Integração com pagamento",
-        description: "A integração com Stripe será configurada em breve. Por enquanto, entre em contato para finalizar o cadastro.",
-        variant: "default",
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          priceId,
+          nomeAdega: formData.nomeAdega,
+          nomeCompleto: formData.nomeCompleto,
+          email: formData.email,
+          password: formData.senha,
+        },
       });
 
-      // Note: The actual registration will be done after Stripe integration
-      // This is just a placeholder for the flow
+      if (error) throw error;
+      
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error("URL de checkout não recebida");
+      }
       
     } catch (error: any) {
       toast({
@@ -130,7 +144,6 @@ const Signup = () => {
         description: error.message || "Ocorreu um erro. Tente novamente.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
