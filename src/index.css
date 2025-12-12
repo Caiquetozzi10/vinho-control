@@ -55,6 +55,12 @@ All colors MUST be HSL.
     --input: 220 15% 88%;
     --ring: 217 91% 60%;
 
+    /* Plan colors */
+    --silver: 220 10% 55%;
+    --silver-light: 220 15% 85%;
+    --gold: 45 93% 47%;
+    --gold-light: 45 80% 75%;
+
     /* Border radius */
     --radius: 0.5rem;
 
