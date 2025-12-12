@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
+import Landing from "./pages/Landing";
+import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Produtos from "./pages/Produtos";
@@ -24,6 +26,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/landing" element={<Landing />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           {/* Rotas apenas para Admin */}
           <Route
