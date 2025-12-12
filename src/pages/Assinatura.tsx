@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAdegaPlan } from "@/hooks/useAdegaPlan";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Crown, Users, BarChart3, Image, Check, ExternalLink, Loader2 } from "lucide-react";
+import { Crown, Users, BarChart3, Image, Check, ExternalLink, Loader2, Upload, Trash2 } from "lucide-react";
 
 const PLAN_DETAILS = {
   prata: {
@@ -36,7 +37,102 @@ const PLAN_DETAILS = {
 
 export default function Assinatura() {
   const { plano, isLoading, maxOperadores, podePersonalizarLogo, temRelatoriosAvancados } = useAdegaPlan();
+  const { adegaId } = useUserRole();
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [currentLogo, setCurrentLogo] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (adegaId) {
+      fetchCurrentLogo();
+    }
+  }, [adegaId]);
+
+  const fetchCurrentLogo = async () => {
+    if (!adegaId) return;
+    const { data } = await supabase
+      .from("adegas")
+      .select("logo_url")
+      .eq("id", adegaId)
+      .single();
+    if (data?.logo_url) {
+      setCurrentLogo(data.logo_url);
+    }
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !adegaId) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Por favor, selecione uma imagem");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 2MB");
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${adegaId}/logo.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("adega-logos")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("adega-logos")
+        .getPublicUrl(fileName);
+
+      const logoUrlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase
+        .from("adegas")
+        .update({ logo_url: logoUrlWithTimestamp })
+        .eq("id", adegaId);
+
+      if (updateError) throw updateError;
+
+      setCurrentLogo(logoUrlWithTimestamp);
+      toast.success("Logo atualizada com sucesso!");
+    } catch (error: any) {
+      console.error("Erro ao fazer upload:", error);
+      toast.error("Erro ao fazer upload da logo");
+    } finally {
+      setUploadingLogo(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!adegaId) return;
+    
+    setUploadingLogo(true);
+    try {
+      const { error: updateError } = await supabase
+        .from("adegas")
+        .update({ logo_url: null })
+        .eq("id", adegaId);
+
+      if (updateError) throw updateError;
+
+      setCurrentLogo(null);
+      toast.success("Logo removida com sucesso!");
+    } catch (error: any) {
+      console.error("Erro ao remover logo:", error);
+      toast.error("Erro ao remover logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const handleManageSubscription = async () => {
     setLoadingPortal(true);
@@ -136,6 +232,72 @@ export default function Assinatura() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Logo Upload Section - Only for Ouro plan */}
+      {podePersonalizarLogo && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Image className="h-5 w-5 text-primary" />
+              Logo Personalizada
+            </CardTitle>
+            <CardDescription>
+              Faça upload da logo da sua adega para exibir no canto superior esquerdo do sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-6">
+              <div className="relative w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center overflow-hidden bg-muted/50">
+                {currentLogo ? (
+                  <img
+                    src={currentLogo}
+                    alt="Logo da adega"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <Image className="h-8 w-8 text-muted-foreground/50" />
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                >
+                  {uploadingLogo ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  {currentLogo ? "Alterar Logo" : "Fazer Upload"}
+                </Button>
+                {currentLogo && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveLogo}
+                    disabled={uploadingLogo}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remover Logo
+                  </Button>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPG ou SVG. Máximo 2MB.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Plan Comparison */}
       <div className="grid gap-6 md:grid-cols-2">
