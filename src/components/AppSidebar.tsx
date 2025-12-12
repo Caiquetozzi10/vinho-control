@@ -10,7 +10,8 @@ import {
   Wine,
   Tags,
   Crown,
-  CreditCard
+  CreditCard,
+  TrendingUp
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -87,12 +88,18 @@ export function AppSidebar() {
       { title: "Produtos", url: "/produtos", icon: Package },
       { title: "Categorias", url: "/categorias", icon: Tags },
       ...baseItems,
-      { title: "Assinatura", url: "/assinatura", icon: CreditCard },
     ];
 
+    // Add Ticket Médio for Ouro plan (premium feature)
+    if (plano === 'ouro' && !isAdminGeral) {
+      lojaItems.push({ title: "Ticket Médio", url: "/ticket-medio", icon: TrendingUp });
+    }
+
+    lojaItems.push({ title: "Assinatura", url: "/assinatura", icon: CreditCard });
+
     if (role === "operador") return baseItems;
-    if (role === "gerente_adega") return lojaItems; // Admin Loja
-    return lojaItems; // Admin Geral
+    if (role === "gerente_adega") return lojaItems;
+    return lojaItems;
   };
 
   const mainItems = getMainItems();
