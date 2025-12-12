@@ -52,18 +52,15 @@ type Produto = {
   ativo: boolean;
 };
 
-const categorias = [
-  { value: "vinho", label: "Vinho" },
-  { value: "cerveja", label: "Cerveja" },
-  { value: "bebida_quente", label: "Bebida Quente" },
-  { value: "energetica", label: "Energética" },
-  { value: "gelo", label: "Gelo" },
-  { value: "outros", label: "Outros" },
-];
+type Categoria = {
+  id: string;
+  nome: string;
+};
 
 export default function Produtos() {
   const { adegaId } = useUserRole();
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -81,6 +78,7 @@ export default function Produtos() {
 
   useEffect(() => {
     fetchProdutos();
+    fetchCategorias();
   }, [adegaId]);
 
   const fetchProdutos = async () => {
@@ -104,6 +102,21 @@ export default function Produtos() {
       toast.error("Erro ao carregar produtos");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategorias = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categorias")
+        .select("id, nome")
+        .eq("ativo", true)
+        .order("nome");
+
+      if (error) throw error;
+      setCategorias(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar categorias:", error);
     }
   };
 
@@ -133,7 +146,7 @@ export default function Produtos() {
       const produtoData = {
         adega_id: adegaId,
         nome: formData.nome,
-        categoria: formData.categoria as "vinho" | "cerveja" | "bebida_quente" | "energetica" | "gelo" | "outros",
+        categoria: formData.categoria as any,
         preco_venda: parseFloat(formData.preco_venda),
         custo: formData.custo ? parseFloat(formData.custo) : null,
         quantidade_estoque: parseInt(formData.quantidade_estoque),
@@ -279,8 +292,8 @@ export default function Produtos() {
                     </SelectTrigger>
                     <SelectContent>
                       {categorias.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
+                        <SelectItem key={cat.id} value={cat.nome}>
+                          {cat.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -411,9 +424,7 @@ export default function Produtos() {
               filteredProdutos.map((produto) => (
                 <TableRow key={produto.id}>
                   <TableCell className="font-medium">{produto.nome}</TableCell>
-                  <TableCell>
-                    {categorias.find((c) => c.value === produto.categoria)?.label}
-                  </TableCell>
+                  <TableCell>{produto.categoria}</TableCell>
                   <TableCell>{produto.codigo_barras || "-"}</TableCell>
                   <TableCell className="text-right">
                     R$ {produto.preco_venda.toFixed(2)}
