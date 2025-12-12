@@ -16,6 +16,7 @@ import Relatorios from "./pages/Relatorios";
 import Categorias from "./pages/Categorias";
 import Adegas from "./pages/admin/Adegas";
 import Usuarios from "./pages/admin/Usuarios";
+import Assinatura from "./pages/Assinatura";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -100,6 +101,16 @@ const App = () => (
               <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Usuarios />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assinatura"
+            element={
+              <ProtectedRoute adminOnly>
+                <DashboardLayout>
+                  <Assinatura />
                 </DashboardLayout>
               </ProtectedRoute>
             }
