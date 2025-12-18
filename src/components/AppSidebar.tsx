@@ -29,6 +29,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -88,33 +89,43 @@ export function AppSidebar() {
     };
   }, []);
 
-  // Itens disponíveis para cada perfil
-  const getMainItems = () => {
-    const baseItems = [
+  // Itens separados por grupos
+  const getMenuGroups = () => {
+    if (role === "operador") {
+      return {
+        group1: [],
+        group2: [
+          { title: "Vendas", url: "/vendas", icon: ShoppingCart },
+          { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
+        ],
+        group3: []
+      };
+    }
+
+    const group1 = [
+      { title: "Dashboard", url: "/", icon: Home },
+      { title: "Produtos", url: "/produtos", icon: Package },
+      { title: "Categorias", url: "/categorias", icon: Tags },
+    ];
+
+    const group2 = [
       { title: "Vendas", url: "/vendas", icon: ShoppingCart },
       { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
     ];
 
-    const lojaItems = [
-      { title: "Dashboard", url: "/", icon: Home },
-      { title: "Produtos", url: "/produtos", icon: Package },
-      { title: "Categorias", url: "/categorias", icon: Tags },
-      ...baseItems,
-    ];
-
     // Add Ticket Médio for Ouro plan (premium feature)
     if (plano === 'ouro' && !isAdminGeral) {
-      lojaItems.push({ title: "Ticket Médio", url: "/ticket-medio", icon: TrendingUp });
+      group2.push({ title: "Ticket Médio", url: "/ticket-medio", icon: TrendingUp });
     }
 
-    lojaItems.push({ title: "Assinatura", url: "/assinatura", icon: CreditCard });
+    const group3 = [
+      { title: "Assinatura", url: "/assinatura", icon: CreditCard },
+    ];
 
-    if (role === "operador") return baseItems;
-    if (role === "gerente_adega") return lojaItems;
-    return lojaItems;
+    return { group1, group2, group3 };
   };
 
-  const mainItems = getMainItems();
+  const { group1, group2, group3 } = getMenuGroups();
 
   const adminItems = [
     { title: "Adegas", url: "/admin/adegas", icon: Building2 },
@@ -148,7 +159,47 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {group1.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="hover:bg-sidebar-accent transition-base"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+            
+            {group1.length > 0 && group2.length > 0 && <SidebarSeparator className="my-2" />}
+            
+            <SidebarMenu>
+              {group2.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="hover:bg-sidebar-accent transition-base"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+            
+            {group3.length > 0 && <SidebarSeparator className="my-2" />}
+            
+            <SidebarMenu>
+              {group3.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
