@@ -166,12 +166,6 @@ export default function Vendas() {
 
   // Função para impressão do recibo
   const imprimirRecibos = (dados: DadosRecibo) => {
-    const printWindow = window.open("", "_blank", "width=320,height=600");
-    if (!printWindow) {
-      toast.error("Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.");
-      return;
-    }
-
     const formatarFormaPagamento = (forma: string) => {
       const formas: Record<string, string> = {
         dinheiro: "Dinheiro",
@@ -244,34 +238,58 @@ export default function Vendas() {
       </div>
     `;
 
-    printWindow.document.write(`
+    // Criar iframe invisível para impressão
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.top = '-10000px';
+    iframe.style.left = '-10000px';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) {
+      toast.error("Erro ao preparar impressão");
+      document.body.removeChild(iframe);
+      return;
+    }
+
+    iframeDoc.open();
+    iframeDoc.write(`
       <!DOCTYPE html>
       <html>
       <head>
         <title>Recibo</title>
         <style>
           @media print {
-            body { margin: 0; }
+            body { margin: 0; padding: 0; }
             .page-break { page-break-after: always; }
           }
+          body { margin: 0; padding: 0; }
         </style>
       </head>
       <body>
         ${gerarReciboHTML("Estabelecimento")}
         <div class="page-break"></div>
         ${gerarReciboHTML("Cliente")}
-        <script>
-          window.onload = function() {
-            window.print();
-            window.onafterprint = function() {
-              window.close();
-            };
-          };
-        </script>
       </body>
       </html>
     `);
-    printWindow.document.close();
+    iframeDoc.close();
+
+    // Aguardar carregamento e imprimir
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (error) {
+        console.error("Erro ao imprimir:", error);
+      }
+      // Remover iframe após impressão
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    }, 250);
   };
 
   const finalizarVenda = async () => {
