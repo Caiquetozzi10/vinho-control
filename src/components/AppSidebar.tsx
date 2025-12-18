@@ -129,16 +129,16 @@ export function AppSidebar() {
     <Sidebar className={isCollapsed ? "w-14" : "w-64"}>
       <SidebarContent>
         {/* Logo - Maior no topo */}
-        <div className="px-4 py-6 border-b border-sidebar-border">
+        <div className={`border-b border-sidebar-border ${isCollapsed ? 'px-2 py-4' : 'px-4 py-8'}`}>
           <div className="flex items-center justify-center">
             {displayLogo ? (
               <img 
                 src={displayLogo} 
                 alt={displayName}
-                className={`rounded-lg object-contain ${isCollapsed ? 'h-10 w-10' : 'h-16 w-full max-w-[180px]'}`}
+                className={`rounded-lg object-contain ${isCollapsed ? 'h-10 w-10' : 'h-24 w-full'}`}
               />
             ) : (
-              <Wine className={`text-primary ${isCollapsed ? 'h-8 w-8' : 'h-12 w-12'}`} />
+              <Wine className={`text-primary ${isCollapsed ? 'h-8 w-8' : 'h-16 w-16'}`} />
             )}
           </div>
         </div>
