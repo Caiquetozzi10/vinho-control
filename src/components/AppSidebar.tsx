@@ -193,28 +193,8 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      {/* Footer com Nome da Adega, Plano e Logout */}
+      {/* Footer com Logout */}
       <SidebarFooter className="border-t border-sidebar-border">
-        {/* Nome da Adega e Plano */}
-        {!isCollapsed && (
-          <div className="px-3 py-3 border-b border-sidebar-border">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-foreground truncate">
-                {displayName}
-              </span>
-              {!isAdminGeral && !planLoading && (
-                <Badge 
-                  variant="outline" 
-                  className={`text-xs w-fit ${plano === 'ouro' ? 'border-gold text-gold' : 'border-silver text-silver'}`}
-                >
-                  <Crown className="w-3 h-3 mr-1" />
-                  {plano === 'ouro' ? 'Ouro' : 'Prata'}
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
-        
         {/* Logout */}
         <SidebarMenu>
           <SidebarMenuItem>
