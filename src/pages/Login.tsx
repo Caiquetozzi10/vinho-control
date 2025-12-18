@@ -103,11 +103,8 @@ export default function Login() {
             <img 
               src={logoAdegastock} 
               alt="AdegaStock Logo" 
-              className="h-24 w-auto"
+              className="h-32 w-auto"
             />
-          </div>
-          <div>
-            <CardDescription className="text-base">Sistema de Gestão para Adegas</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
