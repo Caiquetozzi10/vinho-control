@@ -19,11 +19,8 @@ import Usuarios from "./pages/admin/Usuarios";
 import Assinatura from "./pages/Assinatura";
 import TicketMedio from "./pages/TicketMedio";
 import NotFound from "./pages/NotFound";
-
 const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -32,106 +29,59 @@ const App = () => (
           <Route path="/landing" element={<Landing />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/cadastro-sucesso" element={<CadastroSucesso />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login />} className="shadow-none" />
           {/* Rotas apenas para Admin */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute adminOnly>
+          <Route path="/" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Dashboard />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/produtos"
-            element={
-              <ProtectedRoute adminOnly>
+              </ProtectedRoute>} />
+          <Route path="/produtos" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Produtos />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/categorias"
-            element={
-              <ProtectedRoute adminOnly>
+              </ProtectedRoute>} />
+          <Route path="/categorias" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Categorias />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
+              </ProtectedRoute>} />
           {/* Rotas para todos os usuários */}
-          <Route
-            path="/vendas"
-            element={
-              <ProtectedRoute>
+          <Route path="/vendas" element={<ProtectedRoute>
                 <DashboardLayout>
                   <Vendas />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/relatorios"
-            element={
-              <ProtectedRoute>
+              </ProtectedRoute>} />
+          <Route path="/relatorios" element={<ProtectedRoute>
                 <DashboardLayout>
                   <Relatorios />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
+              </ProtectedRoute>} />
           {/* Rotas de Administração (Admin Geral) */}
-          <Route
-            path="/admin/adegas"
-            element={
-              <ProtectedRoute adminOnly>
+          <Route path="/admin/adegas" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Adegas />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/usuarios"
-            element={
-              <ProtectedRoute adminOnly>
+              </ProtectedRoute>} />
+          <Route path="/admin/usuarios" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Usuarios />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/assinatura"
-            element={
-              <ProtectedRoute adminOnly>
+              </ProtectedRoute>} />
+          <Route path="/assinatura" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Assinatura />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ticket-medio"
-            element={
-              <ProtectedRoute adminOnly>
+              </ProtectedRoute>} />
+          <Route path="/ticket-medio" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <TicketMedio />
                 </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
+              </ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
-);
-
+  </QueryClientProvider>;
 export default App;
