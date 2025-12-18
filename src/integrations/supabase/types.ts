@@ -22,6 +22,7 @@ export type Database = {
           email: string | null
           endereco: string | null
           id: string
+          is_trial: boolean
           logo_url: string | null
           nome: string
           plano: Database["public"]["Enums"]["subscription_plan"]
@@ -29,6 +30,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           telefone: string | null
+          trial_expires_at: string | null
           updated_at: string
         }
         Insert: {
@@ -38,6 +40,7 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           id?: string
+          is_trial?: boolean
           logo_url?: string | null
           nome: string
           plano?: Database["public"]["Enums"]["subscription_plan"]
@@ -45,6 +48,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           telefone?: string | null
+          trial_expires_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -54,6 +58,7 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           id?: string
+          is_trial?: boolean
           logo_url?: string | null
           nome?: string
           plano?: Database["public"]["Enums"]["subscription_plan"]
@@ -61,6 +66,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           telefone?: string | null
+          trial_expires_at?: string | null
           updated_at?: string
         }
         Relationships: []
