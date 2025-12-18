@@ -28,7 +28,12 @@ export const useAdegaAccess = (): AdegaAccessData => {
         return;
       }
 
-      // If no adega_id, user can't access
+      // Still loading role/adegaId
+      if (roleLoading) {
+        return;
+      }
+
+      // If no adega_id after loading is complete, user can't access
       if (!adegaId) {
         setHasAccess(false);
         setReason("Usuário não está vinculado a nenhuma adega.");
