@@ -128,33 +128,17 @@ export function AppSidebar() {
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-64"}>
       <SidebarContent>
-        {/* Logo */}
+        {/* Logo - Maior no topo */}
         <div className="px-4 py-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center">
             {displayLogo ? (
               <img 
                 src={displayLogo} 
                 alt={displayName}
-                className="h-8 w-8 rounded-lg object-cover"
+                className={`rounded-lg object-contain ${isCollapsed ? 'h-10 w-10' : 'h-16 w-full max-w-[180px]'}`}
               />
             ) : (
-              <Wine className="h-6 w-6 text-primary" />
-            )}
-            {!isCollapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
-                  {displayName}
-                </span>
-                {!isAdminGeral && !planLoading && (
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs w-fit ${plano === 'ouro' ? 'border-gold text-gold' : 'border-silver text-silver'}`}
-                  >
-                    <Crown className="w-3 h-3 mr-1" />
-                    {plano === 'ouro' ? 'Ouro' : 'Prata'}
-                  </Badge>
-                )}
-              </div>
+              <Wine className={`text-primary ${isCollapsed ? 'h-8 w-8' : 'h-12 w-12'}`} />
             )}
           </div>
         </div>
@@ -209,8 +193,29 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      {/* Footer with Logout */}
+      {/* Footer com Nome da Adega, Plano e Logout */}
       <SidebarFooter className="border-t border-sidebar-border">
+        {/* Nome da Adega e Plano */}
+        {!isCollapsed && (
+          <div className="px-3 py-3 border-b border-sidebar-border">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-foreground truncate">
+                {displayName}
+              </span>
+              {!isAdminGeral && !planLoading && (
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs w-fit ${plano === 'ouro' ? 'border-gold text-gold' : 'border-silver text-silver'}`}
+                >
+                  <Crown className="w-3 h-3 mr-1" />
+                  {plano === 'ouro' ? 'Ouro' : 'Prata'}
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Logout */}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
