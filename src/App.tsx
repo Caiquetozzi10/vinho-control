@@ -29,7 +29,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/landing" element={<Landing />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/cadastro-sucesso" element={<CadastroSucesso />} />
-          <Route path="/login" element={<Login />} className="shadow-none" />
+          <Route path="/login" element={<Login />} />
           {/* Rotas apenas para Admin */}
           <Route path="/" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
