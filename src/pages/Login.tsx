@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { toast } from "sonner";
-import { Wine, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
+import logoAdegastock from "@/assets/logo-adegastock.png";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "E-mail inválido" }),
@@ -99,13 +100,14 @@ export default function Login() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Wine className="h-8 w-8 text-primary" />
-            </div>
+            <img 
+              src={logoAdegastock} 
+              alt="AdegaStock Logo" 
+              className="h-24 w-auto"
+            />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">AdegaStock</CardTitle>
-            <CardDescription>Sistema de Gestão para Adegas</CardDescription>
+            <CardDescription className="text-base">Sistema de Gestão para Adegas</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
