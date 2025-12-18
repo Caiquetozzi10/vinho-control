@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -446,8 +446,8 @@ export default function Relatorios() {
                 </TableRow>
               ) : (
                 vendas.map((venda) => (
-                  <>
-                    <TableRow key={venda.id}>
+                  <React.Fragment key={venda.id}>
+                    <TableRow>
                       <TableCell>
                         {format(new Date(venda.created_at), "dd/MM/yyyy")}
                       </TableCell>
@@ -465,7 +465,7 @@ export default function Relatorios() {
                       </TableCell>
                     </TableRow>
                     {venda.itens_venda && venda.itens_venda.length > 0 && (
-                      <TableRow key={`${venda.id}-itens`} className="bg-muted/50">
+                      <TableRow className="bg-muted/50">
                         <TableCell colSpan={5} className="py-2">
                           <div className="pl-4 space-y-1">
                             <p className="text-xs font-semibold text-muted-foreground mb-2">
@@ -489,7 +489,7 @@ export default function Relatorios() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 ))
               )}
             </TableBody>
