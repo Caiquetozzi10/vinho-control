@@ -97,7 +97,7 @@ export default function Login() {
       <Card className="w-full max-w-md shadow-lg rounded-sm">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <img src={logoAdegastock} alt="AdegaStock Logo" className="h-32 w-auto border-primary-foreground border shadow-none" />
+            <img alt="AdegaStock Logo" className="h-32 w-auto border-primary-foreground border shadow-none" src="/lovable-uploads/fb574f1b-d4fc-49ea-8134-3e254d1e4bb7.png" />
           </div>
         </CardHeader>
         <CardContent>
