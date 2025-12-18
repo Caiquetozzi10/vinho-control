@@ -30,10 +30,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Plus, Edit, Users as UsersIcon, UserX, Key, AlertTriangle, Crown, Clock } from "lucide-react";
+import { Plus, Edit, Users as UsersIcon, UserX, Key, AlertTriangle, Crown } from "lucide-react";
 import { useAdegaPlan } from "@/hooks/useAdegaPlan";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useAuth } from "@/hooks/useAuth";
 
 type Profile = {
   id: string;
@@ -63,9 +62,7 @@ export default function Usuarios() {
 
   const { plano, maxOperadores, isLoading: planLoading } = useAdegaPlan();
   const { adegaId, role } = useUserRole();
-  const { user } = useAuth();
   const isAdminGeral = role === 'admin_geral';
-  const isSuperAdmin = user?.email === 'admin@admin.com';
 
   const [formData, setFormData] = useState({
     nome_completo: "",
@@ -75,7 +72,6 @@ export default function Usuarios() {
     adega_id: "",
     role: "operador",
     ativo: true,
-    planoOpcao: "trial_7" as "trial_7" | "trial_14" | "prata" | "ouro",
   });
 
   // Count operators in current adega
@@ -147,7 +143,6 @@ export default function Usuarios() {
       adega_id: usuario.adega_id || "",
       role: usuario.user_roles[0]?.role || "operador",
       ativo: usuario.ativo,
-      planoOpcao: "trial_7",
     });
     setDialogOpen(true);
   };
@@ -204,34 +199,6 @@ export default function Usuarios() {
         });
 
       if (roleError) throw roleError;
-
-      // If super admin is creating user with trial or plan, update the adega
-      if (isSuperAdmin && formData.adega_id) {
-        const isTrial = formData.planoOpcao === 'trial_7' || formData.planoOpcao === 'trial_14';
-        const trialDays = formData.planoOpcao === 'trial_7' ? 7 : formData.planoOpcao === 'trial_14' ? 14 : 0;
-        
-        const updateData: any = {
-          is_trial: isTrial,
-          plano: isTrial ? 'prata' : formData.planoOpcao as 'prata' | 'ouro',
-        };
-
-        if (isTrial) {
-          const trialExpires = new Date();
-          trialExpires.setDate(trialExpires.getDate() + trialDays);
-          updateData.trial_expires_at = trialExpires.toISOString();
-        } else {
-          updateData.trial_expires_at = null;
-        }
-
-        const { error: adegaError } = await supabase
-          .from("adegas")
-          .update(updateData)
-          .eq("id", formData.adega_id);
-
-        if (adegaError) {
-          console.error("Erro ao atualizar adega:", adegaError);
-        }
-      }
 
       toast.success("Usuário criado com sucesso!");
       setDialogOpen(false);
@@ -348,7 +315,6 @@ export default function Usuarios() {
       adega_id: "",
       role: "operador",
       ativo: true,
-      planoOpcao: "trial_7",
     });
     setEditingUsuario(null);
   };
@@ -603,51 +569,6 @@ export default function Usuarios() {
                   </SelectContent>
                 </Select>
               </div>
-
-              {isSuperAdmin && !editingUsuario && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Plano / Trial
-                  </Label>
-                  <Select
-                    value={formData.planoOpcao}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, planoOpcao: value as "trial_7" | "trial_14" | "prata" | "ouro" })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="trial_7">
-                        <span className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-blue-500" />
-                          Trial 7 dias
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="trial_14">
-                        <span className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-green-500" />
-                          Trial 14 dias
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="prata">
-                        <span className="flex items-center gap-2">
-                          <Crown className="h-4 w-4 text-silver" />
-                          Plano Prata
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="ouro">
-                        <span className="flex items-center gap-2">
-                          <Crown className="h-4 w-4 text-gold" />
-                          Plano Ouro
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
             </div>
 
             <div className="flex justify-end gap-2">
