@@ -76,6 +76,18 @@ export function AppSidebar() {
     fetchAdegaInfo();
   }, [adegaId]);
 
+  // Escutar evento de atualização de logo
+  useEffect(() => {
+    const handleLogoUpdate = (event: CustomEvent<{ logoUrl: string | null }>) => {
+      setAdegaInfo(prev => prev ? { ...prev, logo_url: event.detail.logoUrl } : null);
+    };
+
+    window.addEventListener('logo-updated', handleLogoUpdate as EventListener);
+    return () => {
+      window.removeEventListener('logo-updated', handleLogoUpdate as EventListener);
+    };
+  }, []);
+
   // Itens disponíveis para cada perfil
   const getMainItems = () => {
     const baseItems = [

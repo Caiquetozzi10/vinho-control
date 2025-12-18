@@ -100,6 +100,10 @@ export default function Assinatura() {
       if (updateError) throw updateError;
 
       setCurrentLogo(logoUrlWithTimestamp);
+      
+      // Disparar evento para atualizar sidebar
+      window.dispatchEvent(new CustomEvent('logo-updated', { detail: { logoUrl: logoUrlWithTimestamp } }));
+      
       toast.success("Logo atualizada com sucesso!");
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
@@ -125,6 +129,10 @@ export default function Assinatura() {
       if (updateError) throw updateError;
 
       setCurrentLogo(null);
+      
+      // Disparar evento para atualizar sidebar
+      window.dispatchEvent(new CustomEvent('logo-updated', { detail: { logoUrl: null } }));
+      
       toast.success("Logo removida com sucesso!");
     } catch (error: any) {
       console.error("Erro ao remover logo:", error);
