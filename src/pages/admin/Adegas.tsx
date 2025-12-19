@@ -487,7 +487,7 @@ export default function Adegas() {
                     <Select
                       value={formData.planoOpcao}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, planoOpcao: value as "trial_7" | "trial_14" | "prata" | "ouro" })
+                        setFormData({ ...formData, planoOpcao: value as "trial_7" | "trial_14" | "prata" | "ouro" | "diamante" })
                       }
                     >
                       <SelectTrigger>
@@ -516,6 +516,12 @@ export default function Adegas() {
                           <span className="flex items-center gap-2">
                             <Crown className="h-4 w-4 text-yellow-500" />
                             Plano Ouro
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="diamante">
+                          <span className="flex items-center gap-2">
+                            <Crown className="h-4 w-4 text-cyan-500" />
+                            Plano Diamante
                           </span>
                         </SelectItem>
                       </SelectContent>
