@@ -60,6 +60,9 @@ All colors MUST be HSL.
     --silver-light: 220 15% 85%;
     --gold: 45 93% 47%;
     --gold-light: 45 80% 75%;
+    --diamond: 199 89% 48%;
+    --diamond-light: 199 89% 70%;
+    --diamond-dark: 199 89% 35%;
 
     /* Border radius */
     --radius: 0.5rem;
