@@ -178,12 +178,9 @@ const Landing = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-diamond/5" />
         <div className="container mx-auto text-center relative z-10">
           {/* Logo centralizado */}
-          <div className="mb-8">
-            <img src={logoAdegaStock} alt="AdegaStock" className="h-48 md:h-56 w-auto mx-auto" />
+          <div className="mb-10">
+            <img src={logoAdegaStock} alt="AdegaStock" className="h-56 md:h-72 w-auto mx-auto" />
           </div>
-          <Badge className="mb-6 px-4 py-1.5 text-sm font-medium bg-primary/10 text-primary border-primary/20">
-            🍷 Sistema completo para sua adega
-          </Badge>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight max-w-4xl mx-auto">
             Controle total da sua Adega,
             <span className="bg-gradient-to-r from-primary to-diamond bg-clip-text text-transparent"> do estoque à saúde financeira</span>
@@ -599,10 +596,7 @@ const Landing = () => {
       {/* Footer */}
       <footer className="py-12 px-4 border-t border-border bg-muted/20">
         <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <Link to="/" className="flex items-center">
-              <img src={logoAdegaStock} alt="AdegaStock" className="h-12 w-auto" />
-            </Link>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
             <p className="text-muted-foreground text-sm">
               © {new Date().getFullYear()} AdegaStock. Todos os direitos reservados.
             </p>
