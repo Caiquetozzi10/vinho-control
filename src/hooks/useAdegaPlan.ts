@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useUserRole } from "./useUserRole";
 
-export type SubscriptionPlan = 'prata' | 'ouro';
+export type SubscriptionPlan = 'prata' | 'ouro' | 'diamante';
 
 interface AdegaPlanInfo {
   plano: SubscriptionPlan;
@@ -12,6 +12,7 @@ interface AdegaPlanInfo {
   maxOperadores: number;
   podePersonalizarLogo: boolean;
   temRelatoriosAvancados: boolean;
+  temModuloContabil: boolean;
 }
 
 const PLAN_FEATURES = {
@@ -19,11 +20,19 @@ const PLAN_FEATURES = {
     maxOperadores: 2,
     podePersonalizarLogo: false,
     temRelatoriosAvancados: false,
+    temModuloContabil: false,
   },
   ouro: {
     maxOperadores: Infinity,
     podePersonalizarLogo: true,
     temRelatoriosAvancados: true,
+    temModuloContabil: false,
+  },
+  diamante: {
+    maxOperadores: Infinity,
+    podePersonalizarLogo: true,
+    temRelatoriosAvancados: true,
+    temModuloContabil: true,
   },
 };
 
@@ -70,5 +79,6 @@ export const useAdegaPlan = (): AdegaPlanInfo => {
     maxOperadores: features.maxOperadores,
     podePersonalizarLogo: features.podePersonalizarLogo,
     temRelatoriosAvancados: features.temRelatoriosAvancados,
+    temModuloContabil: features.temModuloContabil,
   };
 };
