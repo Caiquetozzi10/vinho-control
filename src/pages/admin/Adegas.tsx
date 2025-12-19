@@ -49,7 +49,7 @@ type Adega = {
   ativo: boolean;
   data_ultimo_pagamento: string | null;
   logo_url: string | null;
-  plano: "prata" | "ouro";
+  plano: "prata" | "ouro" | "diamante";
   is_trial: boolean;
   trial_expires_at: string | null;
 };
@@ -74,7 +74,7 @@ export default function Adegas() {
     status_pagamento: "aguardando",
     ativo: true,
     logo_url: "",
-    planoOpcao: "trial_7" as "trial_7" | "trial_14" | "prata" | "ouro",
+    planoOpcao: "trial_7" as "trial_7" | "trial_14" | "prata" | "ouro" | "diamante",
   });
   useEffect(() => {
     fetchAdegas();
@@ -234,7 +234,7 @@ export default function Adegas() {
     setEditingAdega(adega);
     
     // Determine current plan option for editing
-    let planoOpcao: "trial_7" | "trial_14" | "prata" | "ouro" = adega.plano;
+    let planoOpcao: "trial_7" | "trial_14" | "prata" | "ouro" | "diamante" = adega.plano;
     if (adega.is_trial && adega.trial_expires_at) {
       const daysLeft = differenceInDays(new Date(adega.trial_expires_at), new Date());
       planoOpcao = daysLeft > 7 ? "trial_14" : "trial_7";

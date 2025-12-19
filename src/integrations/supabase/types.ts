@@ -139,6 +139,53 @@ export type Database = {
         }
         Relationships: []
       }
+      categorias_financeiras: {
+        Row: {
+          adega_id: string | null
+          ativo: boolean
+          cor: string | null
+          created_at: string
+          icone: string | null
+          id: string
+          is_sistema: boolean
+          nome: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          adega_id?: string | null
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          icone?: string | null
+          id?: string
+          is_sistema?: boolean
+          nome: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          adega_id?: string | null
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          icone?: string | null
+          id?: string
+          is_sistema?: boolean
+          nome?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categorias_financeiras_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       itens_venda: {
         Row: {
           created_at: string
@@ -284,6 +331,76 @@ export type Database = {
           },
         ]
       }
+      transacoes_financeiras: {
+        Row: {
+          adega_id: string
+          categoria_id: string | null
+          created_at: string
+          data_transacao: string
+          descricao: string | null
+          forma_pagamento: string | null
+          id: string
+          observacoes: string | null
+          origem: string
+          tipo: string
+          updated_at: string
+          valor: number
+          venda_id: string | null
+        }
+        Insert: {
+          adega_id: string
+          categoria_id?: string | null
+          created_at?: string
+          data_transacao?: string
+          descricao?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          origem?: string
+          tipo: string
+          updated_at?: string
+          valor: number
+          venda_id?: string | null
+        }
+        Update: {
+          adega_id?: string
+          categoria_id?: string | null
+          created_at?: string
+          data_transacao?: string
+          descricao?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          origem?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+          venda_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_financeiras_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_financeiras_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias_financeiras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_financeiras_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           adega_id: string | null
@@ -379,7 +496,7 @@ export type Database = {
         | "energetica"
         | "gelo"
         | "outros"
-      subscription_plan: "prata" | "ouro"
+      subscription_plan: "prata" | "ouro" | "diamante"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -517,7 +634,7 @@ export const Constants = {
         "gelo",
         "outros",
       ],
-      subscription_plan: ["prata", "ouro"],
+      subscription_plan: ["prata", "ouro", "diamante"],
     },
   },
 } as const
