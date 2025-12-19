@@ -205,7 +205,7 @@ export default function Transacoes() {
   const handleEdit = (transacao: Transacao) => {
     setEditingTransacao(transacao);
     setFormData({
-      tipo: transacao.tipo,
+      tipo: transacao.tipo as "entrada" | "saida",
       valor: transacao.valor.toString(),
       descricao: transacao.descricao || "",
       data_transacao: transacao.data_transacao,
