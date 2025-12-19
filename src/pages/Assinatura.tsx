@@ -11,7 +11,7 @@ import { Crown, Users, BarChart3, Image, Check, ExternalLink, Loader2, Upload, T
 const PLAN_DETAILS = {
   prata: {
     name: "Plano Prata",
-    price: "R$ 49,90/mês",
+    price: "R$ 49,00/mês",
     features: [
       { label: "Até 2 operadores", included: true },
       { label: "Gestão de produtos e vendas", included: true },
@@ -19,18 +19,36 @@ const PLAN_DETAILS = {
       { label: "Logo personalizada", included: false },
       { label: "Relatórios avançados", included: false },
       { label: "Operadores ilimitados", included: false },
+      { label: "Ticket médio", included: false },
+      { label: "Módulo contábil", included: false },
     ],
   },
   ouro: {
     name: "Plano Ouro",
-    price: "R$ 99,90/mês",
+    price: "R$ 99,00/mês",
     features: [
       { label: "Operadores ilimitados", included: true },
       { label: "Gestão de produtos e vendas", included: true },
       { label: "Relatórios básicos", included: true },
       { label: "Logo personalizada", included: true },
       { label: "Relatórios avançados", included: true },
+      { label: "Ticket médio", included: true },
       { label: "Suporte prioritário", included: true },
+      { label: "Módulo contábil", included: false },
+    ],
+  },
+  diamante: {
+    name: "Plano Diamante",
+    price: "R$ 139,90/mês",
+    features: [
+      { label: "Operadores ilimitados", included: true },
+      { label: "Gestão de produtos e vendas", included: true },
+      { label: "Relatórios básicos", included: true },
+      { label: "Logo personalizada", included: true },
+      { label: "Relatórios avançados", included: true },
+      { label: "Ticket médio", included: true },
+      { label: "Suporte prioritário", included: true },
+      { label: "Módulo contábil integrado", included: true },
     ],
   },
 };
