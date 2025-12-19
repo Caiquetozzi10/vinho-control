@@ -11,7 +11,10 @@ import {
   Tags,
   Crown,
   CreditCard,
-  TrendingUp
+  TrendingUp,
+  Calculator,
+  Receipt,
+  LineChart
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -45,7 +48,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { role, adegaId } = useUserRole();
   const { signOut } = useAuth();
-  const { plano, isLoading: planLoading } = useAdegaPlan();
+  const { plano, isLoading: planLoading, temTicketMedio, temModuloContabil } = useAdegaPlan();
   const currentPath = location.pathname;
   const [adegaInfo, setAdegaInfo] = useState<AdegaInfo | null>(null);
   
@@ -113,19 +116,28 @@ export function AppSidebar() {
       { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
     ];
 
-    // Add Ticket Médio for Ouro plan (premium feature)
-    if (plano === 'ouro' && !isAdminGeral) {
+    // Add Ticket Médio for Ouro and Diamante plans
+    if (temTicketMedio && !isAdminGeral) {
       group2.push({ title: "Ticket Médio", url: "/ticket-medio", icon: TrendingUp });
     }
 
-    const group3 = [
+    // Add módulo contábil for Diamante plan
+    const group3: { title: string; url: string; icon: typeof Home }[] = [];
+    
+    if (temModuloContabil && !isAdminGeral) {
+      group3.push({ title: "Dashboard Financeiro", url: "/contabil/dashboard", icon: LineChart });
+      group3.push({ title: "Transações", url: "/contabil/transacoes", icon: Receipt });
+      group3.push({ title: "Relatórios Financeiros", url: "/contabil/relatorios", icon: Calculator });
+    }
+
+    const group4 = [
       { title: "Assinatura", url: "/assinatura", icon: CreditCard },
     ];
 
-    return { group1, group2, group3 };
+    return { group1, group2, group3, group4 };
   };
 
-  const { group1, group2, group3 } = getMenuGroups();
+  const { group1, group2, group3, group4 } = getMenuGroups();
 
   const adminItems = [
     { title: "Adegas", url: "/admin/adegas", icon: Building2 },
@@ -198,8 +210,30 @@ export function AppSidebar() {
             
             {group3.length > 0 && <SidebarSeparator className="my-2" />}
             
+            {group3.length > 0 && (
+              <SidebarMenu>
+                {group3.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        end
+                        className="hover:bg-sidebar-accent transition-base"
+                        activeClassName="bg-sidebar-accent text-primary font-medium"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!isCollapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            )}
+            
+            {group4.length > 0 && <SidebarSeparator className="my-2" />}
+            
             <SidebarMenu>
-              {group3.map((item) => (
+              {group4.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

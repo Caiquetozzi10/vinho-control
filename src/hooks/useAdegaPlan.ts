@@ -12,6 +12,7 @@ interface AdegaPlanInfo {
   maxOperadores: number;
   podePersonalizarLogo: boolean;
   temRelatoriosAvancados: boolean;
+  temTicketMedio: boolean;
   temModuloContabil: boolean;
 }
 
@@ -20,18 +21,21 @@ const PLAN_FEATURES = {
     maxOperadores: 2,
     podePersonalizarLogo: false,
     temRelatoriosAvancados: false,
+    temTicketMedio: false,
     temModuloContabil: false,
   },
   ouro: {
     maxOperadores: Infinity,
     podePersonalizarLogo: true,
     temRelatoriosAvancados: true,
+    temTicketMedio: true,
     temModuloContabil: false,
   },
   diamante: {
     maxOperadores: Infinity,
     podePersonalizarLogo: true,
     temRelatoriosAvancados: true,
+    temTicketMedio: true,
     temModuloContabil: true,
   },
 };
@@ -79,6 +83,7 @@ export const useAdegaPlan = (): AdegaPlanInfo => {
     maxOperadores: features.maxOperadores,
     podePersonalizarLogo: features.podePersonalizarLogo,
     temRelatoriosAvancados: features.temRelatoriosAvancados,
+    temTicketMedio: features.temTicketMedio,
     temModuloContabil: features.temModuloContabil,
   };
 };

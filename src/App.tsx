@@ -18,6 +18,9 @@ import Adegas from "./pages/admin/Adegas";
 import Usuarios from "./pages/admin/Usuarios";
 import Assinatura from "./pages/Assinatura";
 import TicketMedio from "./pages/TicketMedio";
+import DashboardFinanceiro from "./pages/contabil/DashboardFinanceiro";
+import Transacoes from "./pages/contabil/Transacoes";
+import RelatoriosFinanceiros from "./pages/contabil/RelatoriosFinanceiros";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
@@ -76,6 +79,22 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/ticket-medio" element={<ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <TicketMedio />
+                </DashboardLayout>
+              </ProtectedRoute>} />
+          {/* Rotas do Módulo Contábil (Plano Diamante) */}
+          <Route path="/contabil/dashboard" element={<ProtectedRoute adminOnly>
+                <DashboardLayout>
+                  <DashboardFinanceiro />
+                </DashboardLayout>
+              </ProtectedRoute>} />
+          <Route path="/contabil/transacoes" element={<ProtectedRoute adminOnly>
+                <DashboardLayout>
+                  <Transacoes />
+                </DashboardLayout>
+              </ProtectedRoute>} />
+          <Route path="/contabil/relatorios" element={<ProtectedRoute adminOnly>
+                <DashboardLayout>
+                  <RelatoriosFinanceiros />
                 </DashboardLayout>
               </ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
