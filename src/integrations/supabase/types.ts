@@ -110,6 +110,13 @@ export type Database = {
             referencedRelation: "adegas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "audit_logs_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       categorias: {
@@ -182,6 +189,13 @@ export type Database = {
             columns: ["adega_id"]
             isOneToOne: false
             referencedRelation: "adegas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "categorias_financeiras_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas_public"
             referencedColumns: ["id"]
           },
         ]
@@ -327,6 +341,13 @@ export type Database = {
             referencedRelation: "adegas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "produtos_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -366,6 +387,13 @@ export type Database = {
             columns: ["adega_id"]
             isOneToOne: false
             referencedRelation: "adegas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas_public"
             referencedColumns: ["id"]
           },
         ]
@@ -425,6 +453,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transacoes_financeiras_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transacoes_financeiras_categoria_id_fkey"
             columns: ["categoria_id"]
             isOneToOne: false
@@ -470,6 +505,13 @@ export type Database = {
             referencedRelation: "adegas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_roles_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       vendas: {
@@ -508,13 +550,75 @@ export type Database = {
             referencedRelation: "adegas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vendas_adega_id_fkey"
+            columns: ["adega_id"]
+            isOneToOne: false
+            referencedRelation: "adegas_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      adegas_public: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          data_ultimo_pagamento: string | null
+          email: string | null
+          endereco: string | null
+          id: string | null
+          is_trial: boolean | null
+          logo_url: string | null
+          nome: string | null
+          plano: Database["public"]["Enums"]["subscription_plan"] | null
+          status_pagamento: Database["public"]["Enums"]["payment_status"] | null
+          telefone: string | null
+          trial_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          data_ultimo_pagamento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string | null
+          is_trial?: boolean | null
+          logo_url?: string | null
+          nome?: string | null
+          plano?: Database["public"]["Enums"]["subscription_plan"] | null
+          status_pagamento?:
+            | Database["public"]["Enums"]["payment_status"]
+            | null
+          telefone?: string | null
+          trial_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          data_ultimo_pagamento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string | null
+          is_trial?: boolean | null
+          logo_url?: string | null
+          nome?: string | null
+          plano?: Database["public"]["Enums"]["subscription_plan"] | null
+          status_pagamento?:
+            | Database["public"]["Enums"]["payment_status"]
+            | null
+          telefone?: string | null
+          trial_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      can_view_stripe_data: { Args: { _user_id: string }; Returns: boolean }
       create_audit_log: {
         Args: {
           p_acao: string
