@@ -20,16 +20,18 @@ export const useAdegaAccess = (): AdegaAccessData => {
 
   useEffect(() => {
     const checkAccess = async () => {
-      // Admin geral always has access
-      if (role === 'admin_geral') {
-        setHasAccess(true);
-        setReason(null);
-        setLoading(false);
+      // Still loading role/adegaId - wait before making any decisions
+      if (roleLoading) {
         return;
       }
 
-      // Still loading role/adegaId
-      if (roleLoading) {
+      // Admin geral always has access (check AFTER loading is complete)
+      if (role === 'admin_geral') {
+        setHasAccess(true);
+        setReason(null);
+        setIsTrialExpired(false);
+        setIsBlocked(false);
+        setLoading(false);
         return;
       }
 
