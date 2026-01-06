@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
 import { useUserRole } from "./useUserRole";
 
 export type SubscriptionPlan = 'prata' | 'ouro' | 'diamante';
@@ -41,13 +40,14 @@ const PLAN_FEATURES = {
 };
 
 export const useAdegaPlan = (): AdegaPlanInfo => {
-  const { user } = useAuth();
-  const { adegaId } = useUserRole();
+  const { adegaId, loading: roleLoading } = useUserRole();
   const [plano, setPlano] = useState<SubscriptionPlan>('prata');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchPlan = async () => {
+      if (roleLoading) return;
+      
       if (!adegaId) {
         setIsLoading(false);
         return;
@@ -55,12 +55,16 @@ export const useAdegaPlan = (): AdegaPlanInfo => {
 
       try {
         const { data, error } = await supabase
-          .from('adegas')
+          .from('adegas_public')
           .select('plano')
           .eq('id', adegaId)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching plan:', error);
+          setIsLoading(false);
+          return;
+        }
         
         if (data?.plano) {
           setPlano(data.plano as SubscriptionPlan);
@@ -73,7 +77,7 @@ export const useAdegaPlan = (): AdegaPlanInfo => {
     };
 
     fetchPlan();
-  }, [adegaId]);
+  }, [adegaId, roleLoading]);
 
   const features = PLAN_FEATURES[plano];
 

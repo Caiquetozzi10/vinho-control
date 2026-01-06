@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import Landing from "./pages/Landing";
 import Signup from "./pages/Signup";
 import CadastroSucesso from "./pages/CadastroSucesso";
@@ -22,85 +23,121 @@ import DashboardFinanceiro from "./pages/contabil/DashboardFinanceiro";
 import Transacoes from "./pages/contabil/Transacoes";
 import RelatoriosFinanceiros from "./pages/contabil/RelatoriosFinanceiros";
 import NotFound from "./pages/NotFound";
+
 const queryClient = new QueryClient();
-const App = () => <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/cadastro-sucesso" element={<CadastroSucesso />} />
-          <Route path="/login" element={<Login />} />
-          {/* Rotas apenas para Admin */}
-          <Route path="/dashboard" element={<ProtectedRoute adminOnly>
+
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/cadastro-sucesso" element={<CadastroSucesso />} />
+            <Route path="/login" element={<Login />} />
+            {/* Rotas apenas para Admin */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Dashboard />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          <Route path="/produtos" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            <Route path="/produtos" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Produtos />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          <Route path="/categorias" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            <Route path="/categorias" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Categorias />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          {/* Rotas para todos os usuários */}
-          <Route path="/vendas" element={<ProtectedRoute>
+              </ProtectedRoute>
+            } />
+            {/* Rotas para todos os usuários */}
+            <Route path="/vendas" element={
+              <ProtectedRoute>
                 <DashboardLayout>
                   <Vendas />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          <Route path="/relatorios" element={<ProtectedRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/relatorios" element={
+              <ProtectedRoute>
                 <DashboardLayout>
                   <Relatorios />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          {/* Rotas de Administração (Admin Geral) */}
-          <Route path="/admin/adegas" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            {/* Rotas de Administração (Admin Geral) */}
+            <Route path="/admin/adegas" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
-                  <Adegas />
+                  <ErrorBoundary>
+                    <Adegas />
+                  </ErrorBoundary>
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          <Route path="/admin/usuarios" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/usuarios" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
-                  <Usuarios />
+                  <ErrorBoundary>
+                    <Usuarios />
+                  </ErrorBoundary>
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          <Route path="/assinatura" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            <Route path="/assinatura" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Assinatura />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          <Route path="/ticket-medio" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            <Route path="/ticket-medio" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <TicketMedio />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          {/* Rotas do Módulo Contábil (Plano Diamante) */}
-          <Route path="/contabil/dashboard" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            {/* Rotas do Módulo Contábil (Plano Diamante) */}
+            <Route path="/contabil/dashboard" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <DashboardFinanceiro />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          <Route path="/contabil/transacoes" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            <Route path="/contabil/transacoes" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <Transacoes />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          <Route path="/contabil/relatorios" element={<ProtectedRoute adminOnly>
+              </ProtectedRoute>
+            } />
+            <Route path="/contabil/relatorios" element={
+              <ProtectedRoute adminOnly>
                 <DashboardLayout>
                   <RelatoriosFinanceiros />
                 </DashboardLayout>
-              </ProtectedRoute>} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>;
+              </ProtectedRoute>
+            } />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
+);
+
 export default App;

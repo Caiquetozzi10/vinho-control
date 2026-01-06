@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
 
 type AppRole = "admin_geral" | "gerente_adega" | "operador";
 
@@ -12,7 +11,6 @@ interface UserRoleData {
 }
 
 export const useUserRole = (): UserRoleData => {
-  const { user } = useAuth();
   const [role, setRole] = useState<AppRole | null>(null);
   const [adegaId, setAdegaId] = useState<string | null>(null);
   const [adegaNome, setAdegaNome] = useState<string | null>(null);
@@ -20,21 +18,29 @@ export const useUserRole = (): UserRoleData => {
 
   useEffect(() => {
     const fetchUserRole = async () => {
-      if (!user) {
-        setRole(null);
-        setAdegaId(null);
-        setAdegaNome(null);
-        setLoading(false);
-        return;
-      }
-
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setRole(null);
+          setAdegaId(null);
+          setAdegaNome(null);
+          setLoading(false);
+          return;
+        }
+
         // Get user role
-        const { data: roleData } = await supabase
+        const { data: roleData, error: roleError } = await supabase
           .from("user_roles")
           .select("role, adega_id")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
+
+        if (roleError) {
+          console.error("Error fetching role:", roleError);
+          setLoading(false);
+          return;
+        }
 
         if (roleData) {
           setRole(roleData.role as AppRole);
@@ -43,10 +49,10 @@ export const useUserRole = (): UserRoleData => {
           // Fetch adega name if adega_id exists
           if (roleData.adega_id) {
             const { data: adegaData } = await supabase
-              .from("adegas")
+              .from("adegas_public")
               .select("nome")
               .eq("id", roleData.adega_id)
-              .single();
+              .maybeSingle();
             
             if (adegaData) {
               setAdegaNome(adegaData.nome);
@@ -61,7 +67,14 @@ export const useUserRole = (): UserRoleData => {
     };
 
     fetchUserRole();
-  }, [user]);
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      fetchUserRole();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return { role, adegaId, adegaNome, loading };
 };
