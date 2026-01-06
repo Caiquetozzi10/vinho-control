@@ -9,7 +9,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -59,6 +58,7 @@ export default function Usuarios() {
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [resetPasswordUsuario, setResetPasswordUsuario] = useState<Profile | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   const { plano, maxOperadores, isLoading: planLoading } = useAdegaPlan();
   const { adegaId, role } = useUserRole();
@@ -161,44 +161,23 @@ export default function Usuarios() {
       return;
     }
 
+    setActionLoading(true);
     try {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.senha,
-        options: {
-          data: {
-            nome_completo: formData.nome_completo,
-          },
+      // Use edge function for secure user creation
+      const { data, error } = await supabase.functions.invoke('admin-user-management', {
+        body: {
+          action: 'create_user',
+          email: formData.email,
+          password: formData.senha,
+          nomeCompleto: formData.nome_completo,
+          telefone: formData.telefone || null,
+          adegaId: formData.adega_id || null,
+          role: formData.role,
         },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Falha ao criar usuário");
-
-      // Update profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          nome_completo: formData.nome_completo,
-          telefone: formData.telefone || null,
-          adega_id: formData.adega_id || null,
-          ativo: formData.ativo,
-        })
-        .eq("id", authData.user.id);
-
-      if (profileError) throw profileError;
-
-      // Create role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
-          role: formData.role as "admin_geral" | "gerente_adega" | "operador",
-          adega_id: formData.adega_id || null,
-        });
-
-      if (roleError) throw roleError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.success("Usuário criado com sucesso!");
       setDialogOpen(false);
@@ -207,6 +186,8 @@ export default function Usuarios() {
     } catch (error: any) {
       console.error("Erro ao criar usuário:", error);
       toast.error(error.message || "Erro ao criar usuário");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -257,20 +238,27 @@ export default function Usuarios() {
   };
 
   const handleToggleAtivo = async (usuario: Profile) => {
+    setActionLoading(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ ativo: !usuario.ativo })
-        .eq("id", usuario.id);
+      // Use edge function for secure status toggle (includes force logout)
+      const { data, error } = await supabase.functions.invoke('admin-user-management', {
+        body: {
+          action: 'toggle_user_status',
+          userId: usuario.id,
+          ativo: !usuario.ativo,
+        },
+      });
 
       if (error) throw error;
-      toast.success(
-        usuario.ativo ? "Usuário bloqueado" : "Usuário ativado"
-      );
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(usuario.ativo ? "Usuário bloqueado" : "Usuário ativado");
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao atualizar status:", error);
-      toast.error("Erro ao atualizar status");
+      toast.error(error.message || "Erro ao atualizar status");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -288,13 +276,19 @@ export default function Usuarios() {
       return;
     }
 
+    setActionLoading(true);
     try {
-      const { error } = await supabase.auth.admin.updateUserById(
-        resetPasswordUsuario.id,
-        { password: newPassword }
-      );
+      // Use edge function for secure password reset
+      const { data, error } = await supabase.functions.invoke('admin-user-management', {
+        body: {
+          action: 'reset_password',
+          userId: resetPasswordUsuario.id,
+          newPassword: newPassword,
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.success("Senha alterada com sucesso!");
       setResetPasswordDialogOpen(false);
@@ -303,6 +297,8 @@ export default function Usuarios() {
     } catch (error: any) {
       console.error("Erro ao redefinir senha:", error);
       toast.error(error.message || "Erro ao redefinir senha");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -433,6 +429,7 @@ export default function Usuarios() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleResetPassword(usuario)}
+                        disabled={actionLoading}
                       >
                         <Key className="h-4 w-4" />
                       </Button>
@@ -440,6 +437,7 @@ export default function Usuarios() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleAtivo(usuario)}
+                        disabled={actionLoading}
                       >
                         <UserX className="h-4 w-4" />
                       </Button>
@@ -582,7 +580,9 @@ export default function Usuarios() {
               >
                 Cancelar
               </Button>
-              <Button type="submit">{editingUsuario ? "Atualizar" : "Criar"}</Button>
+              <Button type="submit" disabled={actionLoading}>
+                {actionLoading ? "Processando..." : (editingUsuario ? "Atualizar" : "Criar")}
+              </Button>
             </div>
           </form>
         </DialogContent>
@@ -619,8 +619,8 @@ export default function Usuarios() {
               >
                 Cancelar
               </Button>
-              <Button onClick={handleConfirmResetPassword}>
-                Redefinir Senha
+              <Button onClick={handleConfirmResetPassword} disabled={actionLoading}>
+                {actionLoading ? "Processando..." : "Redefinir Senha"}
               </Button>
             </div>
           </div>

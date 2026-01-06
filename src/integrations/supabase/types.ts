@@ -234,6 +234,45 @@ export type Database = {
           },
         ]
       }
+      pending_registrations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          nome_adega: string
+          nome_completo: string
+          password_hash: string
+          session_id: string
+          token: string
+          used: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          nome_adega: string
+          nome_completo: string
+          password_hash: string
+          session_id: string
+          token?: string
+          used?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          nome_adega?: string
+          nome_completo?: string
+          password_hash?: string
+          session_id?: string
+          token?: string
+          used?: boolean
+        }
+        Relationships: []
+      }
       produtos: {
         Row: {
           adega_id: string
@@ -476,6 +515,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_audit_log: {
+        Args: {
+          p_acao: string
+          p_adega_id: string
+          p_detalhes?: Json
+          p_registro_id?: string
+          p_tabela: string
+        }
+        Returns: string
+      }
       get_user_adega_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

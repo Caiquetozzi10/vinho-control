@@ -17,12 +17,8 @@ const CadastroSucesso = () => {
   useEffect(() => {
     const completeRegistration = async () => {
       const sessionId = searchParams.get("session_id");
-      const email = searchParams.get("email");
-      const nome = searchParams.get("nome");
-      const adega = searchParams.get("adega");
-      const password = searchParams.get("password");
 
-      if (!sessionId || !email || !nome || !adega || !password) {
+      if (!sessionId) {
         setError("Dados incompletos. Por favor, tente novamente.");
         setLoading(false);
         return;
@@ -30,13 +26,7 @@ const CadastroSucesso = () => {
 
       try {
         const { data, error: funcError } = await supabase.functions.invoke('complete-registration', {
-          body: {
-            sessionId,
-            email: decodeURIComponent(email),
-            nomeCompleto: decodeURIComponent(nome),
-            nomeAdega: decodeURIComponent(adega),
-            password: decodeURIComponent(password),
-          },
+          body: { sessionId },
         });
 
         if (funcError) throw funcError;
