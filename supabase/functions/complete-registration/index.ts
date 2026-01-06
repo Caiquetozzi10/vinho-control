@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { decode as decodeBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,17 @@ const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[COMPLETE-REGISTRATION] ${step}${detailsStr}`);
 };
+
+// Decrypt password from temporary storage
+function decryptPassword(encrypted: string, key: string): string {
+  const keyBytes = new TextEncoder().encode(key);
+  const encryptedBytes = decodeBase64(encrypted);
+  const decrypted = new Uint8Array(encryptedBytes.length);
+  for (let i = 0; i < encryptedBytes.length; i++) {
+    decrypted[i] = encryptedBytes[i] ^ keyBytes[i % keyBytes.length];
+  }
+  return new TextDecoder().decode(decrypted);
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -31,12 +43,32 @@ serve(async (req) => {
       auth: { persistSession: false }
     });
 
-    const { sessionId, email, nomeCompleto, nomeAdega, password } = await req.json();
-    logStep("Request data received", { sessionId, email, nomeAdega });
+    const { sessionId } = await req.json();
+    logStep("Request data received", { sessionId });
 
-    if (!sessionId || !email || !nomeCompleto || !nomeAdega || !password) {
-      throw new Error("Missing required fields");
+    if (!sessionId) {
+      throw new Error("Missing sessionId");
     }
+
+    // Retrieve pending registration data
+    const { data: pendingData, error: pendingError } = await supabase
+      .from('pending_registrations')
+      .select('*')
+      .eq('session_id', sessionId)
+      .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (pendingError || !pendingData) {
+      logStep("Pending registration not found or expired", { error: pendingError });
+      throw new Error("Registration data not found or expired. Please try again.");
+    }
+
+    logStep("Pending registration found", { email: pendingData.email });
+
+    // Decrypt password
+    const encryptionKey = supabaseServiceKey.substring(0, 32);
+    const password = decryptPassword(pendingData.password_hash, encryptionKey);
 
     // Verify payment with Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -51,7 +83,6 @@ serve(async (req) => {
     const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
     const priceId = subscription.items.data[0].price.id;
     
-    // Check if it's the gold plan
     const isGoldPlan = priceId === "price_1SdMCI056ZndHVpeLiqbs6mU";
     const plano = isGoldPlan ? 'ouro' : 'prata';
     logStep("Plan determined", { priceId, plano });
@@ -64,7 +95,7 @@ serve(async (req) => {
     const { data: adegaData, error: adegaError } = await supabase
       .from('adegas')
       .insert({
-        nome: nomeAdega,
+        nome: pendingData.nome_adega,
         status_pagamento: 'ativo',
         data_ultimo_pagamento: new Date().toISOString(),
         plano: plano,
@@ -82,11 +113,11 @@ serve(async (req) => {
 
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: email,
+      email: pendingData.email,
       password: password,
       email_confirm: true,
       user_metadata: {
-        nome_completo: nomeCompleto,
+        nome_completo: pendingData.nome_completo,
       }
     });
 
@@ -120,6 +151,12 @@ serve(async (req) => {
     if (roleError) {
       logStep("Error creating user role", { error: roleError });
     }
+
+    // Mark pending registration as used
+    await supabase
+      .from('pending_registrations')
+      .update({ used: true })
+      .eq('id', pendingData.id);
 
     logStep("Registration completed successfully");
 
