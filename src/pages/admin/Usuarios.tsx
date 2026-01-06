@@ -196,44 +196,33 @@ export default function Usuarios() {
 
     if (!editingUsuario) return;
 
+    setActionLoading(true);
     try {
-      // Update profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          nome_completo: formData.nome_completo,
+      // Use edge function for secure user update
+      const { data, error } = await supabase.functions.invoke('admin-user-management', {
+        body: {
+          action: 'update_user',
+          userId: editingUsuario.id,
+          nomeCompleto: formData.nome_completo,
           telefone: formData.telefone || null,
-          adega_id: formData.adega_id || null,
+          adegaId: formData.adega_id || null,
+          role: formData.role,
           ativo: formData.ativo,
-        })
-        .eq("id", editingUsuario.id);
+        },
+      });
 
-      if (profileError) throw profileError;
-
-      // Update role
-      // First delete existing role, then insert new one
-      await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", editingUsuario.id);
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: editingUsuario.id,
-          role: formData.role as "admin_geral" | "gerente_adega" | "operador",
-          adega_id: formData.adega_id || null,
-        });
-
-      if (roleError) throw roleError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.success("Usuário atualizado com sucesso!");
       setDialogOpen(false);
       resetForm();
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao atualizar usuário:", error);
-      toast.error("Erro ao atualizar usuário");
+      toast.error(error.message || "Erro ao atualizar usuário");
+    } finally {
+      setActionLoading(false);
     }
   };
 

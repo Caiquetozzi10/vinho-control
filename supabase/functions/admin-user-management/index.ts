@@ -222,6 +222,99 @@ serve(async (req) => {
         });
       }
 
+      case "update_user": {
+        const { userId, nomeCompleto, telefone, adegaId, role, ativo } = params;
+
+        if (!userId) {
+          throw new Error("Missing required field: userId");
+        }
+
+        // Validate role if provided
+        if (role) {
+          const validRoles = ['admin_geral', 'gerente_adega', 'operador'];
+          if (!validRoles.includes(role)) {
+            throw new Error("Invalid role");
+          }
+
+          // Only admin_geral can assign admin_geral role
+          if (role === 'admin_geral' && !isAdminGeral) {
+            throw new Error("Forbidden: Only admin_geral can assign admin_geral role");
+          }
+        }
+
+        // If not admin_geral, verify the target user belongs to their adega
+        if (!isAdminGeral) {
+          const { data: targetProfile } = await supabaseAdmin
+            .from("profiles")
+            .select("adega_id")
+            .eq("id", userId)
+            .single();
+
+          if (targetProfile?.adega_id !== userAdegaId) {
+            throw new Error("Forbidden: Cannot modify users from other adegas");
+          }
+
+          // Gerente can only assign users to their own adega
+          if (adegaId && adegaId !== userAdegaId) {
+            throw new Error("Forbidden: Cannot assign users to other adegas");
+          }
+        }
+
+        // Update profile
+        const profileUpdateData: Record<string, any> = {};
+        if (nomeCompleto !== undefined) profileUpdateData.nome_completo = nomeCompleto;
+        if (telefone !== undefined) profileUpdateData.telefone = telefone || null;
+        if (adegaId !== undefined) profileUpdateData.adega_id = adegaId || null;
+        if (ativo !== undefined) profileUpdateData.ativo = ativo;
+
+        if (Object.keys(profileUpdateData).length > 0) {
+          const { error: profileError } = await supabaseAdmin
+            .from("profiles")
+            .update(profileUpdateData)
+            .eq("id", userId);
+
+          if (profileError) throw profileError;
+          logStep("Profile updated", { userId, updates: profileUpdateData });
+        }
+
+        // Update role if provided
+        if (role) {
+          // Delete existing roles
+          const { error: deleteError } = await supabaseAdmin
+            .from("user_roles")
+            .delete()
+            .eq("user_id", userId);
+
+          if (deleteError) {
+            logStep("Error deleting existing roles", { error: deleteError });
+          }
+
+          // Insert new role
+          const { error: roleError } = await supabaseAdmin
+            .from("user_roles")
+            .insert({
+              user_id: userId,
+              role: role,
+              adega_id: adegaId || null,
+            });
+
+          if (roleError) throw roleError;
+          logStep("Role updated", { userId, role });
+        }
+
+        // If user is being blocked, sign them out
+        if (ativo === false) {
+          await supabaseAdmin.auth.admin.signOut(userId, 'global');
+          logStep("User signed out globally", { targetUserId: userId });
+        }
+
+        logStep("User update completed", { userId });
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }
