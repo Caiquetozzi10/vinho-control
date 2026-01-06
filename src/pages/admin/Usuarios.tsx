@@ -87,44 +87,55 @@ export default function Usuarios() {
 
   const fetchData = async () => {
     try {
+      // Fetch profiles and adegas in parallel
       const [usuariosRes, adegasRes] = await Promise.all([
         supabase
           .from("profiles")
           .select("*")
           .order("nome_completo"),
-        supabase.from("adegas").select("id, nome").order("nome"),
+        supabase.from("adegas_public").select("id, nome").order("nome"),
       ]);
 
       if (usuariosRes.error) throw usuariosRes.error;
-      if (adegasRes.error) throw adegasRes.error;
+      if (adegasRes.error) {
+        console.error("Error fetching adegas:", adegasRes.error);
+        // Continue with empty adegas if error
+      }
 
-      // Get user roles and adegas separately
+      const adegasData = (adegasRes.data || []).filter(a => a.id && a.nome) as Adega[];
+
+      // Get user roles and adegas separately with error handling
       const usuariosComDados = await Promise.all(
         (usuariosRes.data || []).map(async (usuario) => {
-          const [rolesRes, adegaRes] = await Promise.all([
-            supabase
+          try {
+            const rolesRes = await supabase
               .from("user_roles")
               .select("role")
-              .eq("user_id", usuario.id),
-            usuario.adega_id
-              ? supabase
-                  .from("adegas")
-                  .select("nome")
-                  .eq("id", usuario.adega_id)
-                  .single()
-              : Promise.resolve({ data: null, error: null }),
-          ]);
+              .eq("user_id", usuario.id);
 
-          return {
-            ...usuario,
-            user_roles: rolesRes.data || [],
-            adegas: adegaRes.data,
-          };
+            // Find adega from already fetched data
+            const adegaData = usuario.adega_id 
+              ? adegasData.find(a => a.id === usuario.adega_id)
+              : null;
+
+            return {
+              ...usuario,
+              user_roles: rolesRes.data || [],
+              adegas: adegaData ? { nome: adegaData.nome } : null,
+            };
+          } catch (err) {
+            console.error("Error fetching user data:", err);
+            return {
+              ...usuario,
+              user_roles: [],
+              adegas: null,
+            };
+          }
         })
       );
 
       setUsuarios(usuariosComDados as Profile[]);
-      setAdegas(adegasRes.data || []);
+      setAdegas(adegasData);
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
       toast.error("Erro ao carregar dados");
@@ -163,6 +174,9 @@ export default function Usuarios() {
 
     setActionLoading(true);
     try {
+      // Handle "none" value for adega_id
+      const adegaIdValue = formData.adega_id === "none" ? null : formData.adega_id || null;
+      
       // Use edge function for secure user creation
       const { data, error } = await supabase.functions.invoke('admin-user-management', {
         body: {
@@ -171,7 +185,7 @@ export default function Usuarios() {
           password: formData.senha,
           nomeCompleto: formData.nome_completo,
           telefone: formData.telefone || null,
-          adegaId: formData.adega_id || null,
+          adegaId: adegaIdValue,
           role: formData.role,
         },
       });
@@ -198,6 +212,9 @@ export default function Usuarios() {
 
     setActionLoading(true);
     try {
+      // Handle "none" value for adega_id
+      const adegaIdValue = formData.adega_id === "none" ? null : formData.adega_id || null;
+      
       // Use edge function for secure user update
       const { data, error } = await supabase.functions.invoke('admin-user-management', {
         body: {
@@ -205,7 +222,7 @@ export default function Usuarios() {
           userId: editingUsuario.id,
           nomeCompleto: formData.nome_completo,
           telefone: formData.telefone || null,
-          adegaId: formData.adega_id || null,
+          adegaId: adegaIdValue,
           role: formData.role,
           ativo: formData.ativo,
         },
@@ -506,13 +523,14 @@ export default function Usuarios() {
               <div className="space-y-2">
                 <Label>Adega</Label>
                 <Select
-                  value={formData.adega_id}
+                  value={formData.adega_id || undefined}
                   onValueChange={(value) => setFormData({ ...formData, adega_id: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
+                    <SelectValue placeholder="Selecione uma adega" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
                     {adegas.map((adega) => (
                       <SelectItem key={adega.id} value={adega.id}>
                         {adega.nome}
