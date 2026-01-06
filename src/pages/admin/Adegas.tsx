@@ -82,13 +82,15 @@ export default function Adegas() {
 
   const fetchAdegas = async () => {
     try {
-      const { data, error } = await supabase
-        .from("adegas")
-        .select("*")
-        .order("nome");
+      // Use edge function to list adegas (bypasses RLS)
+      const { data, error } = await supabase.functions.invoke('admin-adega-management', {
+        body: { action: 'list_adegas' },
+      });
 
       if (error) throw error;
-      setAdegas(data || []);
+      if (data?.error) throw new Error(data.error);
+      
+      setAdegas(data?.data || []);
     } catch (error) {
       console.error("Erro ao buscar adegas:", error);
       toast.error("Erro ao carregar adegas");
@@ -189,8 +191,10 @@ export default function Adegas() {
       };
 
       if (editingAdega) {
-        // When editing, only update trial fields if super admin and if it's a new trial selection
-        const updateData: any = {
+        // Use edge function for secure update
+        const updatePayload: any = {
+          action: 'update_adega',
+          adegaId: editingAdega.id,
           nome: adegaData.nome,
           email: adegaData.email,
           telefone: adegaData.telefone,
@@ -202,22 +206,29 @@ export default function Adegas() {
 
         // Only super admin can change plan/trial
         if (isSuperAdmin) {
-          updateData.plano = adegaData.plano;
-          updateData.is_trial = adegaData.is_trial;
-          updateData.trial_expires_at = adegaData.trial_expires_at;
+          updatePayload.plano = adegaData.plano;
+          updatePayload.is_trial = adegaData.is_trial;
+          updatePayload.trial_expires_at = adegaData.trial_expires_at;
         }
 
-        const { error } = await supabase
-          .from("adegas")
-          .update(updateData)
-          .eq("id", editingAdega.id);
+        const { data, error } = await supabase.functions.invoke('admin-adega-management', {
+          body: updatePayload,
+        });
 
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         toast.success("Adega atualizada com sucesso!");
       } else {
-        const { error } = await supabase.from("adegas").insert([adegaData]);
+        // Use edge function for secure creation
+        const { data, error } = await supabase.functions.invoke('admin-adega-management', {
+          body: {
+            action: 'create_adega',
+            ...adegaData,
+          },
+        });
 
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         toast.success("Adega cadastrada com sucesso!");
       }
 
