@@ -371,7 +371,7 @@ export default function Usuarios() {
           <AlertTriangle className="h-4 w-4 text-gold" />
           <AlertDescription className="text-foreground">
             Você atingiu o limite de {maxOperadores} operadores do Plano Prata. 
-            <a href="/landing" className="ml-1 text-gold hover:underline font-medium">
+            <a href="/" className="ml-1 text-gold hover:underline font-medium">
               Faça upgrade para o Plano Ouro
             </a> para adicionar operadores ilimitados.
           </AlertDescription>

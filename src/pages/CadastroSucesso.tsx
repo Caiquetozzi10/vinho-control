@@ -81,7 +81,7 @@ const CadastroSucesso = () => {
               <Link to="/signup">Tentar Novamente</Link>
             </Button>
             <Button variant="outline" asChild className="w-full">
-              <Link to="/landing">Voltar ao Início</Link>
+              <Link to="/">Voltar ao Início</Link>
             </Button>
           </CardContent>
         </Card>

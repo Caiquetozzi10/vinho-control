@@ -404,7 +404,7 @@ export default function Relatorios() {
                 Acesse relatórios avançados com análises de produtos mais vendidos, 
                 formas de pagamento e tendências de vendas.
               </p>
-              <a href="/landing">
+              <a href="/">
                 <Button className="bg-gold hover:bg-gold/90 text-primary-foreground">
                   <Crown className="w-4 h-4 mr-2" />
                   Fazer Upgrade para Ouro

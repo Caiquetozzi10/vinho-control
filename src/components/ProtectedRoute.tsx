@@ -99,7 +99,7 @@ export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRoutePr
 
   // Gerente de adega (Admin Loja) não tem acesso às rotas de administração
   if (location.pathname.startsWith("/admin") && role === "gerente_adega") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

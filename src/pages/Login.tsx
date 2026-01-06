@@ -30,7 +30,7 @@ export default function Login() {
       }
     }) => {
       if (session) {
-        navigate("/");
+        navigate("/dashboard");
       }
     });
   }, [navigate]);
@@ -85,7 +85,7 @@ export default function Login() {
           }
         }
         toast.success("Login realizado com sucesso!");
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (error) {
       toast.error("Erro ao fazer login");

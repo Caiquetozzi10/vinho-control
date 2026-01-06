@@ -106,7 +106,7 @@ export function AppSidebar() {
     }
 
     const group1 = [
-      { title: "Dashboard", url: "/", icon: Home },
+      { title: "Dashboard", url: "/dashboard", icon: Home },
       { title: "Produtos", url: "/produtos", icon: Package },
       { title: "Categorias", url: "/categorias", icon: Tags },
     ];
