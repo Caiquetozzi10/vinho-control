@@ -65,27 +65,49 @@ export default function Login() {
         return;
       }
       if (data.user) {
-        // Check if user is active and adega payment is ok
-        const {
-          data: profile
-        } = await supabase.from("profiles").select("ativo, adega_id, adegas(status_pagamento)").eq("id", data.user.id).single();
+        // Check if user is active
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("ativo, adega_id")
+          .eq("id", data.user.id)
+          .single();
+          
         if (!profile?.ativo) {
           await supabase.auth.signOut();
           toast.error("Seu acesso está bloqueado. Entre em contato com o administrador.");
           return;
         }
-        if (profile?.adega_id && profile.adegas) {
-          const adega = profile.adegas as unknown as {
-            status_pagamento: string;
-          };
-          if (adega.status_pagamento === "bloqueado") {
+
+        // Check adega payment status separately using public view
+        if (profile?.adega_id) {
+          const { data: adega } = await supabase
+            .from("adegas_public")
+            .select("status_pagamento")
+            .eq("id", profile.adega_id)
+            .maybeSingle();
+            
+          if (adega?.status_pagamento === "bloqueado") {
             await supabase.auth.signOut();
             toast.error("Seu acesso está bloqueado por falta de pagamento. Entre em contato com o administrador.");
             return;
           }
         }
+
+        // Check user role to redirect appropriately
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+
         toast.success("Login realizado com sucesso!");
-        navigate("/dashboard");
+        
+        // Operador goes directly to vendas, others go to dashboard
+        if (roleData?.role === "operador") {
+          navigate("/vendas");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       toast.error("Erro ao fazer login");
