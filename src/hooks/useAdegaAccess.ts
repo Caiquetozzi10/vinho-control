@@ -44,11 +44,12 @@ export const useAdegaAccess = (): AdegaAccessData => {
       }
 
       try {
+        // Use adegas_public view instead of adegas table to avoid RLS issues for operador users
         const { data: adega, error } = await supabase
-          .from("adegas")
+          .from("adegas_public")
           .select("ativo, status_pagamento, is_trial, trial_expires_at, plano")
           .eq("id", adegaId)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
 
