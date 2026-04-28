@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <Button variant="outline" onClick={this.handleGoBack} className="w-full">
                 Voltar
               </Button>
-              {process.env.NODE_ENV === "development" && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="mt-4 text-xs text-muted-foreground">
                   <summary className="cursor-pointer">Detalhes do erro</summary>
                   <pre className="mt-2 p-2 bg-muted rounded text-wrap break-all">
