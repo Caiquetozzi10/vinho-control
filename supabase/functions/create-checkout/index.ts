@@ -13,16 +13,30 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// Simple password encryption using base64 + XOR (for temporary storage only)
-function encryptPassword(password: string, key: string): string {
-  const keyBytes = new TextEncoder().encode(key);
-  const passwordBytes = new TextEncoder().encode(password);
-  const encrypted = new Uint8Array(passwordBytes.length);
-  for (let i = 0; i < passwordBytes.length; i++) {
-    encrypted[i] = passwordBytes[i] ^ keyBytes[i % keyBytes.length];
-  }
-  return encodeBase64(encrypted.buffer);
+// Strong symmetric encryption using AES-GCM (Web Crypto API)
+// Format stored: base64(iv || ciphertext)
+async function encryptPassword(password: string, keyMaterial: string): Promise<string> {
+  const enc = new TextEncoder();
+  // Derive a 256-bit key from keyMaterial via SHA-256
+  const keyHash = await crypto.subtle.digest("SHA-256", enc.encode(keyMaterial));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyHash,
+    { name: "AES-GCM" },
+    false,
+    ["encrypt"]
+  );
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(password))
+  );
+  const combined = new Uint8Array(iv.length + ciphertext.length);
+  combined.set(iv, 0);
+  combined.set(ciphertext, iv.length);
+  return encodeBase64(combined.buffer);
 }
+
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -70,8 +84,8 @@ serve(async (req) => {
     }
 
     // Encrypt password for temporary storage
-    const encryptionKey = supabaseServiceKey.substring(0, 32);
-    const encryptedPassword = encryptPassword(password, encryptionKey);
+    const encryptionKey = supabaseServiceKey;
+    const encryptedPassword = await encryptPassword(password, encryptionKey);
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({

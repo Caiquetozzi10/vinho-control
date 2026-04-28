@@ -13,15 +13,23 @@ const logStep = (step: string, details?: any) => {
   console.log(`[COMPLETE-REGISTRATION] ${step}${detailsStr}`);
 };
 
-// Decrypt password from temporary storage
-function decryptPassword(encrypted: string, key: string): string {
-  const keyBytes = new TextEncoder().encode(key);
-  const encryptedBytes = decodeBase64(encrypted);
-  const decrypted = new Uint8Array(encryptedBytes.length);
-  for (let i = 0; i < encryptedBytes.length; i++) {
-    decrypted[i] = encryptedBytes[i] ^ keyBytes[i % keyBytes.length];
-  }
-  return new TextDecoder().decode(decrypted);
+// Decrypt password from temporary storage (AES-GCM)
+async function decryptPassword(encrypted: string, keyMaterial: string): Promise<string> {
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+  const keyHash = await crypto.subtle.digest("SHA-256", enc.encode(keyMaterial));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyHash,
+    { name: "AES-GCM" },
+    false,
+    ["decrypt"]
+  );
+  const combined = new Uint8Array(decodeBase64(encrypted));
+  const iv = combined.slice(0, 12);
+  const ciphertext = combined.slice(12);
+  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  return dec.decode(plaintext);
 }
 
 serve(async (req) => {
@@ -67,8 +75,8 @@ serve(async (req) => {
     logStep("Pending registration found", { email: pendingData.email });
 
     // Decrypt password
-    const encryptionKey = supabaseServiceKey.substring(0, 32);
-    const password = decryptPassword(pendingData.password_hash, encryptionKey);
+    const encryptionKey = supabaseServiceKey;
+    const password = await decryptPassword(pendingData.password_hash, encryptionKey);
 
     // Verify payment with Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
