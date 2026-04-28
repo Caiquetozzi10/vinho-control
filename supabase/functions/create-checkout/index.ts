@@ -84,8 +84,8 @@ serve(async (req) => {
     }
 
     // Encrypt password for temporary storage
-    const encryptionKey = supabaseServiceKey.substring(0, 32);
-    const encryptedPassword = encryptPassword(password, encryptionKey);
+    const encryptionKey = supabaseServiceKey;
+    const encryptedPassword = await encryptPassword(password, encryptionKey);
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
