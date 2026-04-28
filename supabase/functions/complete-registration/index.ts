@@ -75,8 +75,8 @@ serve(async (req) => {
     logStep("Pending registration found", { email: pendingData.email });
 
     // Decrypt password
-    const encryptionKey = supabaseServiceKey.substring(0, 32);
-    const password = decryptPassword(pendingData.password_hash, encryptionKey);
+    const encryptionKey = supabaseServiceKey;
+    const password = await decryptPassword(pendingData.password_hash, encryptionKey);
 
     // Verify payment with Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
