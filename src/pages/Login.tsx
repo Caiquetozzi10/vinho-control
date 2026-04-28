@@ -70,27 +70,12 @@ export default function Login() {
           .from("profiles")
           .select("ativo, adega_id")
           .eq("id", data.user.id)
-          .single();
-          
-        if (!profile?.ativo) {
+          .maybeSingle();
+
+        if (profile && profile.ativo === false) {
           await supabase.auth.signOut();
           toast.error("Seu acesso está bloqueado. Entre em contato com o administrador.");
           return;
-        }
-
-        // Check adega payment status separately using public view
-        if (profile?.adega_id) {
-          const { data: adega } = await supabase
-            .from("adegas_public")
-            .select("status_pagamento")
-            .eq("id", profile.adega_id)
-            .maybeSingle();
-            
-          if (adega?.status_pagamento === "bloqueado") {
-            await supabase.auth.signOut();
-            toast.error("Seu acesso está bloqueado por falta de pagamento. Entre em contato com o administrador.");
-            return;
-          }
         }
 
         // Check user role to redirect appropriately
@@ -100,9 +85,24 @@ export default function Login() {
           .eq("user_id", data.user.id)
           .maybeSingle();
 
+        // Admin geral não está vinculado a adega — pular checagem de pagamento
+        if (roleData?.role !== "admin_geral" && profile?.adega_id) {
+          const { data: adega } = await supabase
+            .from("adegas_public")
+            .select("status_pagamento")
+            .eq("id", profile.adega_id)
+            .maybeSingle();
+
+          if (adega?.status_pagamento === "bloqueado") {
+            await supabase.auth.signOut();
+            toast.error("Seu acesso está bloqueado por falta de pagamento. Entre em contato com o administrador.");
+            return;
+          }
+        }
+
         toast.success("Login realizado com sucesso!");
-        
-        // Operador goes directly to vendas, others go to dashboard
+
+        // Operador vai direto para vendas, demais para dashboard
         if (roleData?.role === "operador") {
           navigate("/vendas");
         } else {
