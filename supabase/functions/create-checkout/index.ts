@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { encode as encodeBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts";
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,16 +13,6 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// Simple password encryption using base64 + XOR (for temporary storage only)
-function encryptPassword(password: string, key: string): string {
-  const keyBytes = new TextEncoder().encode(key);
-  const passwordBytes = new TextEncoder().encode(password);
-  const encrypted = new Uint8Array(passwordBytes.length);
-  for (let i = 0; i < passwordBytes.length; i++) {
-    encrypted[i] = passwordBytes[i] ^ keyBytes[i % keyBytes.length];
-  }
-  return encodeBase64(encrypted.buffer);
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
