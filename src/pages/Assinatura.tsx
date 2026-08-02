@@ -55,7 +55,7 @@ const PLAN_DETAILS = {
 
 export default function Assinatura() {
   const { plano, isLoading, maxOperadores, podePersonalizarLogo, temRelatoriosAvancados } = useAdegaPlan();
-  const { adegaId } = useUserRole();
+  const { adegaId, role } = useUserRole();
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [currentLogo, setCurrentLogo] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
