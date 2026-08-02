@@ -161,6 +161,10 @@ export default function Assinatura() {
   };
 
   const handleManageSubscription = async () => {
+    if (role === 'admin_geral' || !adegaId) {
+      toast.info("Sua conta de administrador não possui assinatura própria. Gerencie os planos em Adegas.");
+      return;
+    }
     setLoadingPortal(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -175,7 +179,12 @@ export default function Assinatura() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const details = 'context' in error && error.context ? await error.context.text().catch(() => '') : '';
+        console.error('customer-portal failed:', details || error.message);
+        throw new Error(details || error.message);
+      }
+
 
       if (data?.url) {
         window.open(data.url, '_blank');
