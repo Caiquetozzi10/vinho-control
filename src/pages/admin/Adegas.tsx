@@ -551,8 +551,6 @@ export default function Adegas() {
                     O plano escolhido acima define os recursos liberados durante o teste.
                   </p>
                 </div>
-
-                )}
               </div>
 
               <div className="flex justify-end gap-2">
