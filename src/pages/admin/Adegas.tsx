@@ -74,7 +74,8 @@ export default function Adegas() {
     status_pagamento: "aguardando",
     ativo: true,
     logo_url: "",
-    planoOpcao: "trial_7" as "trial_7" | "trial_14" | "prata" | "ouro" | "diamante",
+    plano: "prata" as "prata" | "ouro" | "diamante",
+    trialOpcao: "nenhum" as "nenhum" | "7" | "14" | "30",
   });
   useEffect(() => {
     fetchAdegas();
@@ -167,9 +168,9 @@ export default function Adegas() {
     }
 
     try {
-      const isTrial = formData.planoOpcao === 'trial_7' || formData.planoOpcao === 'trial_14';
-      const trialDays = formData.planoOpcao === 'trial_7' ? 7 : formData.planoOpcao === 'trial_14' ? 14 : 0;
-      
+      const isTrial = formData.trialOpcao !== 'nenhum';
+      const trialDays = isTrial ? parseInt(formData.trialOpcao, 10) : 0;
+
       let trialExpiresAt: string | null = null;
       if (isTrial) {
         const trialExpires = new Date();
@@ -185,7 +186,7 @@ export default function Adegas() {
         status_pagamento: formData.status_pagamento as "ativo" | "aguardando" | "bloqueado",
         ativo: formData.ativo,
         logo_url: formData.logo_url || null,
-        plano: isTrial ? 'prata' : formData.planoOpcao as 'prata' | 'ouro',
+        plano: formData.plano,
         is_trial: isTrial,
         trial_expires_at: trialExpiresAt,
       };
@@ -202,14 +203,11 @@ export default function Adegas() {
           status_pagamento: adegaData.status_pagamento,
           ativo: adegaData.ativo,
           logo_url: adegaData.logo_url,
+          plano: adegaData.plano,
+          is_trial: adegaData.is_trial,
+          trial_expires_at: adegaData.trial_expires_at,
         };
 
-        // Only super admin can change plan/trial
-        if (isSuperAdmin) {
-          updatePayload.plano = adegaData.plano;
-          updatePayload.is_trial = adegaData.is_trial;
-          updatePayload.trial_expires_at = adegaData.trial_expires_at;
-        }
 
         const { data, error } = await supabase.functions.invoke('admin-adega-management', {
           body: updatePayload,
@@ -243,14 +241,14 @@ export default function Adegas() {
 
   const handleEdit = (adega: Adega) => {
     setEditingAdega(adega);
-    
-    // Determine current plan option for editing
-    let planoOpcao: "trial_7" | "trial_14" | "prata" | "ouro" | "diamante" = adega.plano;
+
+    // Determine current trial option for editing
+    let trialOpcao: "nenhum" | "7" | "14" | "30" = "nenhum";
     if (adega.is_trial && adega.trial_expires_at) {
       const daysLeft = differenceInDays(new Date(adega.trial_expires_at), new Date());
-      planoOpcao = daysLeft > 7 ? "trial_14" : "trial_7";
+      trialOpcao = daysLeft > 14 ? "30" : daysLeft > 7 ? "14" : "7";
     }
-    
+
     setFormData({
       nome: adega.nome,
       email: adega.email || "",
@@ -259,7 +257,8 @@ export default function Adegas() {
       status_pagamento: adega.status_pagamento,
       ativo: adega.ativo,
       logo_url: adega.logo_url || "",
-      planoOpcao,
+      plano: adega.plano,
+      trialOpcao,
     });
     setPreviewUrl(adega.logo_url || null);
     setDialogOpen(true);
@@ -274,7 +273,8 @@ export default function Adegas() {
       status_pagamento: "aguardando",
       ativo: true,
       logo_url: "",
-      planoOpcao: "trial_7",
+      plano: "prata",
+      trialOpcao: "nenhum",
     });
     setEditingAdega(null);
     setPreviewUrl(null);
@@ -489,55 +489,69 @@ export default function Adegas() {
                   </Select>
                 </div>
 
-                {isSuperAdmin && (
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Crown className="h-4 w-4" />
-                      Plano / Trial
-                    </Label>
-                    <Select
-                      value={formData.planoOpcao}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, planoOpcao: value as "trial_7" | "trial_14" | "prata" | "ouro" | "diamante" })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="trial_7">
-                          <span className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-blue-500" />
-                            Trial 7 dias
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="trial_14">
-                          <span className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-green-500" />
-                            Trial 14 dias
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="prata">
-                          <span className="flex items-center gap-2">
-                            <Crown className="h-4 w-4 text-gray-400" />
-                            Plano Prata
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="ouro">
-                          <span className="flex items-center gap-2">
-                            <Crown className="h-4 w-4 text-yellow-500" />
-                            Plano Ouro
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="diamante">
-                          <span className="flex items-center gap-2">
-                            <Crown className="h-4 w-4 text-cyan-500" />
-                            Plano Diamante
-                          </span>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Crown className="h-4 w-4" />
+                    Plano
+                  </Label>
+                  <Select
+                    value={formData.plano}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, plano: value as "prata" | "ouro" | "diamante" })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="prata">
+                        <span className="flex items-center gap-2">
+                          <Crown className="h-4 w-4 text-muted-foreground" />
+                          Plano Prata
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="ouro">
+                        <span className="flex items-center gap-2">
+                          <Crown className="h-4 w-4 text-yellow-500" />
+                          Plano Ouro
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="diamante">
+                        <span className="flex items-center gap-2">
+                          <Crown className="h-4 w-4 text-cyan-500" />
+                          Plano Diamante
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Período de teste
+                  </Label>
+                  <Select
+                    value={formData.trialOpcao}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, trialOpcao: value as "nenhum" | "7" | "14" | "30" })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nenhum">Sem teste (assinatura normal)</SelectItem>
+                      <SelectItem value="7">Teste de 7 dias</SelectItem>
+                      <SelectItem value="14">Teste de 14 dias</SelectItem>
+                      <SelectItem value="30">Teste de 30 dias</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    O plano escolhido acima define os recursos liberados durante o teste.
+                  </p>
+                </div>
+
                 )}
               </div>
 
@@ -602,9 +616,9 @@ export default function Adegas() {
                   <TableCell className="font-medium">{adega.nome}</TableCell>
                   <TableCell>{adega.email || "-"}</TableCell>
                   <TableCell>
-                    <Badge className={adega.plano === 'ouro' ? 'bg-yellow-500' : 'bg-gray-400'}>
+                    <Badge className={adega.plano === 'diamante' ? 'bg-cyan-500' : adega.plano === 'ouro' ? 'bg-yellow-500' : 'bg-gray-400'}>
                       <Crown className="w-3 h-3 mr-1" />
-                      {adega.plano === 'ouro' ? 'Ouro' : 'Prata'}
+                      {adega.plano === 'diamante' ? 'Diamante' : adega.plano === 'ouro' ? 'Ouro' : 'Prata'}
                     </Badge>
                   </TableCell>
                   <TableCell>{getTrialStatus(adega) || "-"}</TableCell>
