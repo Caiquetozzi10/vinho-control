@@ -37,6 +37,7 @@ type Profile = {
   id: string;
   nome_completo: string;
   email: string;
+  username: string | null;
   telefone: string | null;
   ativo: boolean;
   adega_id: string | null;
@@ -66,6 +67,7 @@ export default function Usuarios() {
 
   const [formData, setFormData] = useState({
     nome_completo: "",
+    username: "",
     email: "",
     senha: "",
     telefone: "",
@@ -148,6 +150,7 @@ export default function Usuarios() {
     setEditingUsuario(usuario);
     setFormData({
       nome_completo: usuario.nome_completo,
+      username: usuario.username || "",
       email: usuario.email,
       senha: "",
       telefone: usuario.telefone || "",
@@ -167,6 +170,11 @@ export default function Usuarios() {
       return;
     }
 
+    if (!formData.username.trim()) {
+      toast.error("Informe o usuário de acesso (ex: joao.silva)");
+      return;
+    }
+
     if (!formData.senha || formData.senha.length < 6) {
       toast.error("Senha deve ter no mínimo 6 caracteres");
       return;
@@ -181,7 +189,8 @@ export default function Usuarios() {
       const { data, error } = await supabase.functions.invoke('admin-user-management', {
         body: {
           action: 'create_user',
-          email: formData.email,
+          username: formData.username,
+          email: formData.email || null,
           password: formData.senha,
           nomeCompleto: formData.nome_completo,
           telefone: formData.telefone || null,
@@ -221,6 +230,11 @@ export default function Usuarios() {
           action: 'update_user',
           userId: editingUsuario.id,
           nomeCompleto: formData.nome_completo,
+          email: formData.email || null,
+          username:
+            formData.username && formData.username !== (editingUsuario.username || "")
+              ? formData.username
+              : undefined,
           telefone: formData.telefone || null,
           adegaId: adegaIdValue,
           role: formData.role,
@@ -311,6 +325,7 @@ export default function Usuarios() {
   const resetForm = () => {
     setFormData({
       nome_completo: "",
+      username: "",
       email: "",
       senha: "",
       telefone: "",
@@ -389,6 +404,7 @@ export default function Usuarios() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Usuário</TableHead>
               <TableHead>E-mail</TableHead>
               <TableHead>Adega</TableHead>
               <TableHead>Função</TableHead>
@@ -399,7 +415,7 @@ export default function Usuarios() {
           <TableBody>
             {usuarios.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   <UsersIcon className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
                   <p className="text-muted-foreground">Nenhum usuário encontrado</p>
                 </TableCell>
@@ -408,7 +424,8 @@ export default function Usuarios() {
               usuarios.map((usuario) => (
                 <TableRow key={usuario.id}>
                   <TableCell className="font-medium">{usuario.nome_completo}</TableCell>
-                  <TableCell>{usuario.email}</TableCell>
+                  <TableCell className="font-mono text-sm">{usuario.username || "-"}</TableCell>
+                  <TableCell>{usuario.email?.endsWith("@adegastock.local") ? "-" : usuario.email}</TableCell>
                   <TableCell>{usuario.adegas?.nome || "-"}</TableCell>
                   <TableCell>
                     {usuario.user_roles.length > 0
@@ -485,14 +502,28 @@ export default function Usuarios() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="username">Usuário de acesso</Label>
+                <Input
+                  id="username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  placeholder="nome.sobrenome"
+                  autoComplete="off"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Usado para entrar no sistema (ex: joao.silva)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail (opcional)</Label>
                 <Input 
                   id="email" 
                   type="email"
-                  value={formData.email} 
+                  value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  disabled={!!editingUsuario}
-                  required
+                  placeholder="apenas informativo"
                 />
               </div>
 

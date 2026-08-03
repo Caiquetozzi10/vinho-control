@@ -11,6 +11,29 @@ const logStep = (step: string, details?: any) => {
   console.log(`[ADMIN-USER-MANAGEMENT] ${step}${detailsStr}`);
 };
 
+// Usuários acessam o sistema por "nome.sobrenome"; o e-mail é apenas informativo.
+const USERNAME_EMAIL_DOMAIN = "adegastock.local";
+
+const normalizeUsername = (raw: string): string => {
+  const normalized = String(raw)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ".")
+    .replace(/[^a-z0-9.]/g, "")
+    .replace(/\.+/g, ".")
+    .replace(/^\.|\.$/g, "");
+
+  if (normalized.length < 3) {
+    throw new Error("Usuário inválido: use o formato nome.sobrenome");
+  }
+  return normalized;
+};
+
+const usernameToAuthEmail = (username: string) => `${username}@${USERNAME_EMAIL_DOMAIN}`;
+
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -108,15 +131,18 @@ serve(async (req) => {
       }
 
       case "create_user": {
-        const { email, password, nomeCompleto, telefone, adegaId, role } = params;
+        const { email, username, password, nomeCompleto, telefone, adegaId, role } = params;
 
-        if (!email || !password || !nomeCompleto || !role) {
+        if (!username || !password || !nomeCompleto || !role) {
           throw new Error("Missing required fields");
         }
 
         if (password.length < 6) {
           throw new Error("Password must be at least 6 characters");
         }
+
+        const normalizedUsername = normalizeUsername(username);
+        const authEmail = usernameToAuthEmail(normalizedUsername);
 
         // Validate role
         const validRoles = ['admin_geral', 'gerente_adega', 'operador'];
@@ -134,24 +160,37 @@ serve(async (req) => {
           throw new Error("Forbidden: Cannot create users for other adegas");
         }
 
-        // Create auth user
+        // Username must be unique
+        const { data: existingUsername } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .ilike("username", normalizedUsername)
+          .maybeSingle();
+
+        if (existingUsername) {
+          throw new Error(`O usuário "${normalizedUsername}" já está em uso`);
+        }
+
+        // Create auth user (login is username-based; the email is only informative)
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email,
+          email: authEmail,
           password,
           email_confirm: true,
-          user_metadata: { nome_completo: nomeCompleto }
+          user_metadata: { nome_completo: nomeCompleto, username: normalizedUsername }
         });
 
         if (authError) throw authError;
         if (!authData.user) throw new Error("Failed to create user");
 
-        logStep("User created", { newUserId: authData.user.id });
+        logStep("User created", { newUserId: authData.user.id, username: normalizedUsername });
 
         // Update profile
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
           .update({
             nome_completo: nomeCompleto,
+            username: normalizedUsername,
+            email: email || authEmail,
             telefone: telefone || null,
             adega_id: adegaId || null,
           })
@@ -160,6 +199,7 @@ serve(async (req) => {
         if (profileError) {
           logStep("Profile update error", { error: profileError });
         }
+
 
         // Create role
         const { error: roleError } = await supabaseAdmin
@@ -223,7 +263,8 @@ serve(async (req) => {
       }
 
       case "update_user": {
-        const { userId, nomeCompleto, telefone, adegaId, role, ativo } = params;
+        const { userId, nomeCompleto, telefone, adegaId, role, ativo, username, email } = params;
+
 
         if (!userId) {
           throw new Error("Missing required field: userId");
@@ -260,12 +301,40 @@ serve(async (req) => {
           }
         }
 
+        // Update login username (also updates the internal auth email)
+        let normalizedUsername: string | null = null;
+        if (username) {
+          normalizedUsername = normalizeUsername(username);
+
+          const { data: existingUsername } = await supabaseAdmin
+            .from("profiles")
+            .select("id")
+            .ilike("username", normalizedUsername)
+            .neq("id", userId)
+            .maybeSingle();
+
+          if (existingUsername) {
+            throw new Error(`O usuário "${normalizedUsername}" já está em uso`);
+          }
+
+          const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+            email: usernameToAuthEmail(normalizedUsername),
+            email_confirm: true,
+            user_metadata: { username: normalizedUsername },
+          });
+
+          if (authUpdateError) throw authUpdateError;
+        }
+
         // Update profile
         const profileUpdateData: Record<string, any> = {};
         if (nomeCompleto !== undefined) profileUpdateData.nome_completo = nomeCompleto;
         if (telefone !== undefined) profileUpdateData.telefone = telefone || null;
         if (adegaId !== undefined) profileUpdateData.adega_id = adegaId || null;
         if (ativo !== undefined) profileUpdateData.ativo = ativo;
+        if (email) profileUpdateData.email = email;
+        if (normalizedUsername) profileUpdateData.username = normalizedUsername;
+
 
         if (Object.keys(profileUpdateData).length > 0) {
           const { error: profileError } = await supabaseAdmin

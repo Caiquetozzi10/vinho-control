@@ -360,6 +360,7 @@ export type Database = {
           nome_completo: string
           telefone: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           adega_id?: string | null
@@ -370,6 +371,7 @@ export type Database = {
           nome_completo: string
           telefone?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           adega_id?: string | null
@@ -380,6 +382,7 @@ export type Database = {
           nome_completo?: string
           telefone?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: [
           {
