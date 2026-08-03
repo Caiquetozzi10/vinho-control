@@ -263,7 +263,8 @@ serve(async (req) => {
       }
 
       case "update_user": {
-        const { userId, nomeCompleto, telefone, adegaId, role, ativo } = params;
+        const { userId, nomeCompleto, telefone, adegaId, role, ativo, username, email } = params;
+
 
         if (!userId) {
           throw new Error("Missing required field: userId");
