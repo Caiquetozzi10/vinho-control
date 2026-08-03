@@ -9,9 +9,30 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import logoAdegastock from "@/assets/logo-adegastock.png";
+const USERNAME_EMAIL_DOMAIN = "adegastock.local";
+
+const normalizeUsername = (raw: string) =>
+  raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ".")
+    .replace(/[^a-z0-9.]/g, "")
+    .replace(/\.+/g, ".")
+    .replace(/^\.|\.$/g, "");
+
+// Usuários entram com "nome.sobrenome"; admins podem usar o e-mail.
+const resolveLoginEmail = (identifier: string) => {
+  const value = identifier.trim();
+  if (value.includes("@")) return value.toLowerCase();
+  const username = normalizeUsername(value);
+  return username ? `${username}@${USERNAME_EMAIL_DOMAIN}` : "";
+};
+
 const loginSchema = z.object({
   email: z.string().email({
-    message: "E-mail inválido"
+    message: "Usuário ou e-mail inválido"
   }),
   password: z.string().min(6, {
     message: "Senha deve ter no mínimo 6 caracteres"
@@ -20,7 +41,7 @@ const loginSchema = z.object({
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   useEffect(() => {
     // Check if user is already logged in
@@ -36,6 +57,8 @@ export default function Login() {
   }, [navigate]);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const email = resolveLoginEmail(identifier);
+
     try {
       loginSchema.parse({
         email,
@@ -58,7 +81,7 @@ export default function Login() {
       });
       if (error) {
         if (error.message.includes("Invalid login")) {
-          toast.error("E-mail ou senha incorretos");
+          toast.error("Usuário ou senha incorretos");
         } else {
           toast.error(error.message);
         }
@@ -125,8 +148,8 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
+              <Label htmlFor="identifier">Usuário</Label>
+              <Input id="identifier" type="text" autoCapitalize="none" autoComplete="username" placeholder="nome.sobrenome" value={identifier} onChange={e => setIdentifier(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
