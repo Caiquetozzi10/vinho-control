@@ -11,6 +11,29 @@ const logStep = (step: string, details?: any) => {
   console.log(`[ADMIN-USER-MANAGEMENT] ${step}${detailsStr}`);
 };
 
+// Usuários acessam o sistema por "nome.sobrenome"; o e-mail é apenas informativo.
+const USERNAME_EMAIL_DOMAIN = "adegastock.local";
+
+const normalizeUsername = (raw: string): string => {
+  const normalized = String(raw)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ".")
+    .replace(/[^a-z0-9.]/g, "")
+    .replace(/\.+/g, ".")
+    .replace(/^\.|\.$/g, "");
+
+  if (normalized.length < 3) {
+    throw new Error("Usuário inválido: use o formato nome.sobrenome");
+  }
+  return normalized;
+};
+
+const usernameToAuthEmail = (username: string) => `${username}@${USERNAME_EMAIL_DOMAIN}`;
+
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
