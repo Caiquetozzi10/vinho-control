@@ -131,15 +131,18 @@ serve(async (req) => {
       }
 
       case "create_user": {
-        const { email, password, nomeCompleto, telefone, adegaId, role } = params;
+        const { email, username, password, nomeCompleto, telefone, adegaId, role } = params;
 
-        if (!email || !password || !nomeCompleto || !role) {
+        if (!username || !password || !nomeCompleto || !role) {
           throw new Error("Missing required fields");
         }
 
         if (password.length < 6) {
           throw new Error("Password must be at least 6 characters");
         }
+
+        const normalizedUsername = normalizeUsername(username);
+        const authEmail = usernameToAuthEmail(normalizedUsername);
 
         // Validate role
         const validRoles = ['admin_geral', 'gerente_adega', 'operador'];
@@ -157,24 +160,37 @@ serve(async (req) => {
           throw new Error("Forbidden: Cannot create users for other adegas");
         }
 
-        // Create auth user
+        // Username must be unique
+        const { data: existingUsername } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .ilike("username", normalizedUsername)
+          .maybeSingle();
+
+        if (existingUsername) {
+          throw new Error(`O usuário "${normalizedUsername}" já está em uso`);
+        }
+
+        // Create auth user (login is username-based; the email is only informative)
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email,
+          email: authEmail,
           password,
           email_confirm: true,
-          user_metadata: { nome_completo: nomeCompleto }
+          user_metadata: { nome_completo: nomeCompleto, username: normalizedUsername }
         });
 
         if (authError) throw authError;
         if (!authData.user) throw new Error("Failed to create user");
 
-        logStep("User created", { newUserId: authData.user.id });
+        logStep("User created", { newUserId: authData.user.id, username: normalizedUsername });
 
         // Update profile
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
           .update({
             nome_completo: nomeCompleto,
+            username: normalizedUsername,
+            email: email || authEmail,
             telefone: telefone || null,
             adega_id: adegaId || null,
           })
@@ -183,6 +199,7 @@ serve(async (req) => {
         if (profileError) {
           logStep("Profile update error", { error: profileError });
         }
+
 
         // Create role
         const { error: roleError } = await supabaseAdmin
