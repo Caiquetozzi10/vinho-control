@@ -301,12 +301,40 @@ serve(async (req) => {
           }
         }
 
+        // Update login username (also updates the internal auth email)
+        let normalizedUsername: string | null = null;
+        if (username) {
+          normalizedUsername = normalizeUsername(username);
+
+          const { data: existingUsername } = await supabaseAdmin
+            .from("profiles")
+            .select("id")
+            .ilike("username", normalizedUsername)
+            .neq("id", userId)
+            .maybeSingle();
+
+          if (existingUsername) {
+            throw new Error(`O usuário "${normalizedUsername}" já está em uso`);
+          }
+
+          const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+            email: usernameToAuthEmail(normalizedUsername),
+            email_confirm: true,
+            user_metadata: { username: normalizedUsername },
+          });
+
+          if (authUpdateError) throw authUpdateError;
+        }
+
         // Update profile
         const profileUpdateData: Record<string, any> = {};
         if (nomeCompleto !== undefined) profileUpdateData.nome_completo = nomeCompleto;
         if (telefone !== undefined) profileUpdateData.telefone = telefone || null;
         if (adegaId !== undefined) profileUpdateData.adega_id = adegaId || null;
         if (ativo !== undefined) profileUpdateData.ativo = ativo;
+        if (email) profileUpdateData.email = email;
+        if (normalizedUsername) profileUpdateData.username = normalizedUsername;
+
 
         if (Object.keys(profileUpdateData).length > 0) {
           const { error: profileError } = await supabaseAdmin
