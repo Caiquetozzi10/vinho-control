@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Search, Package, AlertTriangle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Package, AlertTriangle, Barcode } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { z } from "zod";
 
@@ -65,6 +65,8 @@ export default function Produtos() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
+  const [scanValue, setScanValue] = useState("");
+  const scanInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     nome: "",
@@ -80,6 +82,7 @@ export default function Produtos() {
     fetchProdutos();
     fetchCategorias();
   }, [adegaId]);
+
 
   const fetchProdutos = async () => {
     if (!adegaId) {
@@ -119,6 +122,55 @@ export default function Produtos() {
       console.error("Erro ao buscar categorias:", error);
     }
   };
+
+  // Leitor de código de barras: identifica o produto automaticamente
+  const handleScan = async (codigoRaw: string) => {
+    const codigo = codigoRaw.trim();
+    if (!codigo) return;
+    setScanValue("");
+
+    const local = produtos.find((p) => p.codigo_barras === codigo);
+    if (local) {
+      toast.success(`Produto identificado: ${local.nome}`);
+      handleEdit(local);
+      return;
+    }
+
+    if (!adegaId) {
+      toast.error("Erro: Adega não identificada");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("produtos")
+      .select("*")
+      .eq("adega_id", adegaId)
+      .eq("codigo_barras", codigo)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Erro ao buscar código de barras:", error);
+      toast.error("Erro ao consultar código de barras");
+      return;
+    }
+
+    if (data) {
+      if (!data.ativo) {
+        toast.info(`Produto inativo encontrado: ${data.nome}. Reative os dados abaixo.`);
+      } else {
+        toast.success(`Produto identificado: ${data.nome}`);
+      }
+      handleEdit(data as Produto);
+      return;
+    }
+
+    // Código novo: abre cadastro já com o código preenchido
+    resetForm();
+    setFormData((prev) => ({ ...prev, codigo_barras: codigo }));
+    setDialogOpen(true);
+    toast.info("Código novo — cadastre o produto");
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -387,7 +439,34 @@ export default function Produtos() {
         </Card>
       )}
 
+      <Card className="shadow-card border-primary/30">
+        <CardContent className="p-4 space-y-2">
+          <Label htmlFor="scan" className="flex items-center gap-2">
+            <Barcode className="h-4 w-4 text-primary" />
+            Leitor de código de barras
+          </Label>
+          <Input
+            id="scan"
+            ref={scanInputRef}
+            autoFocus
+            placeholder="Aproxime o leitor e escaneie o produto..."
+            value={scanValue}
+            onChange={(e) => setScanValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleScan(scanValue);
+              }
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            Se o código já existir, o produto é identificado e aberto para edição. Se for novo, o cadastro abre com o código preenchido.
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center gap-2">
+
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

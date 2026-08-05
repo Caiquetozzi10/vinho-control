@@ -147,22 +147,45 @@ export default function Vendas() {
     return recebido - total;
   };
 
-  // Buscar produto por código de barras
-  const buscarPorCodigoBarras = (codigo: string) => {
-    if (!codigo.trim()) return;
-    
-    const produto = produtos.find((p) => p.codigo_barras === codigo.trim());
-    
-    if (produto) {
-      adicionarAoCarrinho(produto);
+  // Buscar produto por código de barras (local + consulta no banco)
+  const buscarPorCodigoBarras = async (codigoRaw: string) => {
+    const codigo = codigoRaw.trim();
+    if (!codigo) return;
+
+    const local = produtos.find((p) => p.codigo_barras === codigo);
+
+    if (local) {
+      adicionarAoCarrinho(local);
       setCodigoBarras("");
-    } else {
-      toast.error("Produto não encontrado com este código de barras");
+      codigoBarrasInputRef.current?.focus();
+      return;
     }
-    
-    // Manter foco no input de código de barras
+
+    if (adegaId) {
+      const { data } = await supabase
+        .from("produtos")
+        .select("id, nome, preco_venda, quantidade_estoque, codigo_barras, ativo")
+        .eq("adega_id", adegaId)
+        .eq("codigo_barras", codigo)
+        .maybeSingle();
+
+      if (data && data.ativo) {
+        if (data.quantidade_estoque <= 0) {
+          toast.error(`${data.nome} está sem estoque`);
+        } else {
+          adicionarAoCarrinho(data as Produto);
+        }
+        setCodigoBarras("");
+        codigoBarrasInputRef.current?.focus();
+        return;
+      }
+    }
+
+    toast.error("Produto não encontrado com este código de barras");
+    setCodigoBarras("");
     codigoBarrasInputRef.current?.focus();
   };
+
 
   // Função para impressão do recibo
   const imprimirRecibos = (dados: DadosRecibo) => {
