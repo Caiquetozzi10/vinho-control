@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,8 @@ export default function Produtos() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
+  const [scanValue, setScanValue] = useState("");
+  const scanInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     nome: "",
@@ -80,6 +82,7 @@ export default function Produtos() {
     fetchProdutos();
     fetchCategorias();
   }, [adegaId]);
+
 
   const fetchProdutos = async () => {
     if (!adegaId) {
