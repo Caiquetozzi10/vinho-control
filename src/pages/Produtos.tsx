@@ -123,6 +123,55 @@ export default function Produtos() {
     }
   };
 
+  // Leitor de código de barras: identifica o produto automaticamente
+  const handleScan = async (codigoRaw: string) => {
+    const codigo = codigoRaw.trim();
+    if (!codigo) return;
+    setScanValue("");
+
+    const local = produtos.find((p) => p.codigo_barras === codigo);
+    if (local) {
+      toast.success(`Produto identificado: ${local.nome}`);
+      handleEdit(local);
+      return;
+    }
+
+    if (!adegaId) {
+      toast.error("Erro: Adega não identificada");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("produtos")
+      .select("*")
+      .eq("adega_id", adegaId)
+      .eq("codigo_barras", codigo)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Erro ao buscar código de barras:", error);
+      toast.error("Erro ao consultar código de barras");
+      return;
+    }
+
+    if (data) {
+      if (!data.ativo) {
+        toast.info(`Produto inativo encontrado: ${data.nome}. Reative os dados abaixo.`);
+      } else {
+        toast.success(`Produto identificado: ${data.nome}`);
+      }
+      handleEdit(data as Produto);
+      return;
+    }
+
+    // Código novo: abre cadastro já com o código preenchido
+    resetForm();
+    setFormData((prev) => ({ ...prev, codigo_barras: codigo }));
+    setDialogOpen(true);
+    toast.info("Código novo — cadastre o produto");
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
