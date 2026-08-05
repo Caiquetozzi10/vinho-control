@@ -439,7 +439,34 @@ export default function Produtos() {
         </Card>
       )}
 
+      <Card className="shadow-card border-primary/30">
+        <CardContent className="p-4 space-y-2">
+          <Label htmlFor="scan" className="flex items-center gap-2">
+            <Barcode className="h-4 w-4 text-primary" />
+            Leitor de código de barras
+          </Label>
+          <Input
+            id="scan"
+            ref={scanInputRef}
+            autoFocus
+            placeholder="Aproxime o leitor e escaneie o produto..."
+            value={scanValue}
+            onChange={(e) => setScanValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleScan(scanValue);
+              }
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            Se o código já existir, o produto é identificado e aberto para edição. Se for novo, o cadastro abre com o código preenchido.
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center gap-2">
+
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
