@@ -291,7 +291,7 @@ export type Database = {
         Row: {
           adega_id: string
           ativo: boolean
-          categoria: Database["public"]["Enums"]["product_category"]
+          categoria: string
           codigo_barras: string | null
           created_at: string
           custo: number | null
@@ -306,7 +306,7 @@ export type Database = {
         Insert: {
           adega_id: string
           ativo?: boolean
-          categoria: Database["public"]["Enums"]["product_category"]
+          categoria: string
           codigo_barras?: string | null
           created_at?: string
           custo?: number | null
@@ -321,7 +321,7 @@ export type Database = {
         Update: {
           adega_id?: string
           ativo?: boolean
-          categoria?: Database["public"]["Enums"]["product_category"]
+          categoria?: string
           codigo_barras?: string | null
           created_at?: string
           custo?: number | null
