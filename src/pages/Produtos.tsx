@@ -29,7 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Search, Package, AlertTriangle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Package, AlertTriangle, Barcode } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { z } from "zod";
 
